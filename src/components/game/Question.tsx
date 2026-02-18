@@ -39,26 +39,47 @@ export const Question: React.FC<QuestionProps> = ({ f1, f2, operation, onAnswer,
     };
 
     if (operation === 'compare') {
-        // ... (rest of the compare logic - unchanged)
         return (
-            <Card className="text-center border-8 border-yellow-300 shadow-xl bg-white/95">
-                <h3 className="text-2xl font-black text-slate-400 mb-6 uppercase tracking-widest">Which is bigger?</h3>
-                <div className="flex items-center justify-center gap-4 sm:gap-12 text-slate-700 mb-10">
-                    <div className="bg-indigo-50 p-6 rounded-3xl shadow-inner border-4 border-indigo-100 text-indigo-600 transform hover:scale-110 transition-transform cursor-default">
+            <Card className="text-center border-8 border-yellow-300 shadow-xl bg-white/95 overflow-hidden">
+                <h3 className="text-2xl font-black text-slate-400 mb-6 uppercase tracking-widest">Click the Bigger One!</h3>
+                <div className="flex items-center justify-center gap-4 sm:gap-12 text-slate-700 mb-6">
+                    {/* Left Fraction Card */}
+                    <button
+                        disabled={disabled}
+                        onClick={() => onAnswer(1)}
+                        className={`group relative bg-indigo-50 p-6 rounded-[2.5rem] shadow-lg border-4 border-indigo-100 text-indigo-600 transform hover:scale-105 active:scale-95 transition-all outline-none focus:ring-4 ring-indigo-300 ${disabled ? 'opacity-50 grayscale' : ''}`}
+                    >
+                        <div className="absolute -top-4 -left-4 bg-indigo-500 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Left</div>
                         <FractionDisplay numerator={f1.numerator} denominator={f1.denominator} size="xl" />
-                    </div>
+                        <div className="absolute inset-x-0 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-xs font-black uppercase tracking-widest bg-white/80 px-4 py-1 rounded-full shadow-sm">This one is bigger?</span>
+                        </div>
+                    </button>
 
-                    <div className="text-3xl font-bold text-slate-300">vs</div>
+                    {/* Equal Sign Button */}
+                    <button
+                        disabled={disabled}
+                        onClick={() => onAnswer(0)}
+                        className={`group bg-yellow-400 hover:bg-yellow-300 text-white w-20 h-20 rounded-full flex items-center justify-center border-b-8 border-yellow-600 active:border-b-0 active:translate-y-2 transition-all shadow-xl hover:scale-110 ${disabled ? 'opacity-50 grayscale' : 'animate-pulse'}`}
+                    >
+                        <span className="text-5xl font-black">=</span>
+                    </button>
 
-                    <div className="bg-rose-50 p-6 rounded-3xl shadow-inner border-4 border-rose-100 text-rose-600 transform hover:scale-110 transition-transform cursor-default">
+                    {/* Right Fraction Card */}
+                    <button
+                        disabled={disabled}
+                        onClick={() => onAnswer(-1)}
+                        className={`group relative bg-rose-50 p-6 rounded-[2.5rem] shadow-lg border-4 border-rose-100 text-rose-600 transform hover:scale-105 active:scale-95 transition-all outline-none focus:ring-4 ring-rose-300 ${disabled ? 'opacity-50 grayscale' : ''}`}
+                    >
+                        <div className="absolute -top-4 -right-4 bg-rose-500 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Right</div>
                         <FractionDisplay numerator={f2.numerator} denominator={f2.denominator} size="xl" />
-                    </div>
+                        <div className="absolute inset-x-0 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-xs font-black uppercase tracking-widest bg-white/80 px-4 py-1 rounded-full shadow-sm">This one is bigger?</span>
+                        </div>
+                    </button>
                 </div>
-                <div className="flex gap-4 justify-center">
-                    <Button disabled={disabled} onClick={() => onAnswer(-1)} size="lg" className="text-3xl px-8 py-4 bg-indigo-500 hover:bg-indigo-400 border-b-8 border-indigo-700 active:border-b-0 active:translate-y-2">&lt;</Button>
-                    <Button disabled={disabled} onClick={() => onAnswer(0)} size="lg" className="text-3xl px-8 py-4 bg-yellow-500 hover:bg-yellow-400 border-b-8 border-yellow-700 active:border-b-0 active:translate-y-2">=</Button>
-                    <Button disabled={disabled} onClick={() => onAnswer(1)} size="lg" className="text-3xl px-8 py-4 bg-rose-500 hover:bg-rose-400 border-b-8 border-rose-700 active:border-b-0 active:translate-y-2">&gt;</Button>
-                </div>
+
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-bounce">Select the largest fraction or the = sign</p>
             </Card>
         );
     }

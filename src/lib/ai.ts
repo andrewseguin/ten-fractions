@@ -43,23 +43,28 @@ export const generateAIAnswer = (
 
     // Generate a wrong answer
     if (operation === 'compare') {
-        // Just pick a wrong comparison logic
         const real = correctRes as number;
         const options = [-1, 0, 1].filter(o => o !== real);
         return options[Math.floor(Math.random() * options.length)];
     } else {
-        // Generate a plausible but wrong fraction
-        if (Math.random() > 0.5) {
-            // The "classic" mistake: add tops and bottoms
-            return simplifyFraction({
-                numerator: f1.numerator + (operation === '-' ? -f2.numerator : f2.numerator), // crude approx
-                denominator: f1.denominator + (operation === '-' ? -f2.denominator : f2.denominator) || 2
-            });
+        // Human-like mistakes are more common at lower levels
+        const mistakeChance = difficulty === 1 ? 0.8 : 0.6;
+
+        if (Math.random() < mistakeChance) {
+            // "Adding across" - common beginner mistake
+            let num = f1.numerator + (operation === '-' ? -f2.numerator : f2.numerator);
+            let den = f1.denominator + (operation === '-' ? -f2.denominator : f2.denominator);
+
+            // Basic sanity checks
+            if (num <= 0) num = 1;
+            if (den <= 0) den = 2;
+
+            return simplifyFraction({ numerator: num, denominator: den });
         } else {
-            // Just random variance
+            // Small math error (off by one)
             const res = correctRes as Fraction;
             return {
-                numerator: res.numerator + (Math.random() > 0.5 ? 1 : -1),
+                numerator: Math.max(1, res.numerator + (Math.random() > 0.5 ? 1 : -1)),
                 denominator: res.denominator
             };
         }

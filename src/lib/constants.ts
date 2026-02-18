@@ -7,9 +7,9 @@ export const POINTS_PER_DIFFICULTY = {
 };
 
 export const AI_ERROR_RATES = {
-    1: 0.3, // 30% chance of error
-    2: 0.2, // 20%
-    3: 0.1, // 10%
+    1: 0.4, // 40% chance of error
+    2: 0.3, // 30%
+    3: 0.15, // 15%
 };
 
 export type PlayerType = 'human' | 'computer';

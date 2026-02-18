@@ -148,6 +148,24 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     </>
                 )}
 
+                {bgId === 'forest' && (
+                    <>
+                        <div className="absolute top-[20%] left-[15%] text-xl animate-pulse opacity-80 shadow-[0_0_20px_rgba(255,255,255,0.8)] rounded-full">✨</div>
+                        <div className="absolute top-[40%] right-[10%] text-xl animate-float opacity-70">🧚</div>
+                        <div className="absolute bottom-[30%] left-[30%] text-2xl animate-pulse-delayed opacity-60">🍄</div>
+                        <div className="absolute top-[60%] left-[10%] text-sm animate-float-slow opacity-40">✨</div>
+                    </>
+                )}
+
+                {bgId === 'candy' && (
+                    <>
+                        <div className="absolute top-[15%] left-[-10%] text-7xl animate-move-horizontal opacity-60" style={{ animationDuration: '40s' }}>☁️</div>
+                        <div className="absolute top-[30%] right-[15%] text-5xl animate-bounce-slow opacity-80">🍭</div>
+                        <div className="absolute bottom-[20%] left-[20%] text-4xl animate-bounce opacity-70" style={{ animationDelay: '0.5s' }}>🍬</div>
+                        <div className="absolute top-[45%] right-[-5%] text-6xl animate-move-horizontal-reverse opacity-50" style={{ animationDuration: '30s' }}>🍰</div>
+                    </>
+                )}
+
                 <div className="absolute top-10 left-10 text-4xl animate-pulse opacity-50">✨</div>
                 <div className="absolute bottom-20 right-20 text-3xl animate-pulse delay-700 opacity-40">💫</div>
             </div>
@@ -372,6 +390,13 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
           }
           .animate-float-delayed {
             animation: float 6s ease-in-out infinite 1s;
+          }
+          @keyframes pulse-delayed {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+          }
+          .animate-pulse-delayed {
+            animation: pulse-delayed 3s ease-in-out infinite 1.5s;
           }
           .animate-bounce-slow {
             animation: bounce-slow 3s ease-in-out infinite;

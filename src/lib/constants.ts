@@ -30,4 +30,6 @@ export const BACKGROUNDS = [
     { id: 'castle', name: 'Castle', css: 'bg-sky-400', image: '/assets/castle.png' },
     { id: 'space', name: 'Space Station', css: 'bg-slate-900', image: '/assets/space.png' },
     { id: 'deepsea', name: 'Deep Sea', css: 'bg-cyan-900', image: '/assets/deepsea.png' },
+    { id: 'forest', name: 'Magic Forest', css: 'bg-emerald-900', image: '/assets/forest.png' },
+    { id: 'candy', name: 'Candy World', css: 'bg-pink-400', image: '/assets/candy.png' },
 ];

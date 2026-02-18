@@ -140,15 +140,20 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                                     placeholder="Your Name"
                                 />
                             </div>
-                            <div className="flex gap-4 flex-wrap justify-center">
+                            <div className="grid grid-cols-4 gap-3 max-h-[280px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
                                 {CHARACTERS.map(c => (
                                     <button
                                         key={c.id}
                                         onClick={() => setP1Char(c.id)}
-                                        className={`relative p-1 rounded-full border-4 transition-all duration-300 hover:scale-110 active:scale-95 ${p1Char === c.id ? 'border-blue-500 scale-110 ring-8 ring-blue-50 shadow-2xl' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                        className={`group relative p-3 rounded-3xl border-4 transition-all duration-300 hover:scale-105 active:scale-95 flex flex-col items-center gap-1 ${p1Char === c.id ? 'bg-blue-100 border-blue-500 shadow-xl ring-4 ring-blue-50' : 'bg-white/50 border-transparent hover:border-blue-200 opacity-80 hover:opacity-100'}`}
                                     >
-                                        <Character id={c.id} size="md" className="sm:w-20 sm:h-20" />
-                                        {p1Char === c.id && <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full h-8 w-8 flex items-center justify-center text-sm shadow-lg border-2 border-white animate-in zoom-in">⭐</div>}
+                                        <div className="relative w-16 h-16 flex items-center justify-center">
+                                            <Character id={c.id} fullBody size="sm" className="w-full h-full" />
+                                        </div>
+                                        <span className={`text-[10px] font-black uppercase tracking-tighter ${p1Char === c.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                                            {c.name}
+                                        </span>
+                                        {p1Char === c.id && <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-[10px] shadow-lg border-2 border-white animate-in zoom-in">⭐</div>}
                                     </button>
                                 ))}
                             </div>
@@ -181,15 +186,20 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                                 </div>
                             )}
 
-                            <div className="flex gap-4 flex-wrap justify-center">
+                            <div className="grid grid-cols-4 gap-3 max-h-[280px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-rose-200 scrollbar-track-transparent">
                                 {CHARACTERS.map(c => (
                                     <button
                                         key={c.id}
                                         onClick={() => setP2Char(c.id)}
-                                        className={`relative p-1 rounded-full border-4 transition-all duration-300 hover:scale-110 active:scale-95 ${p2Char === c.id ? 'border-rose-500 scale-110 ring-8 ring-rose-50 shadow-2xl' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                        className={`group relative p-3 rounded-3xl border-4 transition-all duration-300 hover:scale-105 active:scale-95 flex flex-col items-center gap-1 ${p2Char === c.id ? 'bg-rose-100 border-rose-500 shadow-xl ring-4 ring-rose-50' : 'bg-white/50 border-transparent hover:border-rose-200 opacity-80 hover:opacity-100'}`}
                                     >
-                                        <Character id={c.id} size="md" className="sm:w-20 sm:h-20" />
-                                        {p2Char === c.id && <div className="absolute -bottom-1 -right-1 bg-rose-500 text-white rounded-full h-8 w-8 flex items-center justify-center text-sm shadow-lg border-2 border-white animate-in zoom-in">👾</div>}
+                                        <div className="relative w-16 h-16 flex items-center justify-center">
+                                            <Character id={c.id} fullBody size="sm" className="w-full h-full" />
+                                        </div>
+                                        <span className={`text-[10px] font-black uppercase tracking-tighter ${p2Char === c.id ? 'text-rose-600' : 'text-slate-400'}`}>
+                                            {c.name}
+                                        </span>
+                                        {p2Char === c.id && <div className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-[10px] shadow-lg border-2 border-white animate-in zoom-in">👾</div>}
                                     </button>
                                 ))}
                             </div>

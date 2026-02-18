@@ -15,6 +15,7 @@ export const AI_ERROR_RATES = {
 export type PlayerType = 'human' | 'computer';
 
 export const CHARACTERS = [
+    { id: 'dog', name: 'Skylar', color: 'bg-orange-400', image: '/assets/dog.png', type: 'climber' },
     { id: 'robot1', name: 'Robo-One', color: 'bg-blue-500', image: '/assets/robot1.png', type: 'robot' },
     { id: 'robot2', name: 'Mecha-Bit', color: 'bg-cyan-500', image: '/assets/robot2.png', type: 'robot' },
     { id: 'dino1', name: 'Rexy', color: 'bg-green-600', image: '/assets/dino1.png', type: 'dino' },
@@ -23,7 +24,6 @@ export const CHARACTERS = [
     { id: 'climber-f', name: 'Mia', color: 'bg-rose-500', image: '/assets/climber-f.png', type: 'climber' },
     { id: 'alien', name: 'Zarp', color: 'bg-purple-600', image: '/assets/alien.png', type: 'climber' },
     { id: 'wizard', name: 'Merlin', color: 'bg-blue-700', image: '/assets/wizard.png', type: 'climber' },
-    { id: 'dog', name: 'Skylar', color: 'bg-orange-400', image: '/assets/dog.png', type: 'climber' },
     { id: 'cat', name: 'Whiskers', color: 'bg-teal-600', image: '/assets/cat.png', type: 'climber' },
 ];
 

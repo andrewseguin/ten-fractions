@@ -15,7 +15,7 @@ type GameLogic = ReturnType<typeof useGameLogic>;
 
 interface GameArenaProps {
     game: GameLogic;
-    bgId?: string; // Accept bgId from MainMenu
+    bgId?: string;
 }
 
 export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) => {
@@ -28,6 +28,8 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
         currentProblem,
         feedback,
         isThinking,
+        isSpeedRound,
+        timeLeft,
         checkAnswer,
         resetGame,
         advanceTurn
@@ -50,7 +52,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                                     <div className="absolute -top-4 -right-4 text-4xl animate-bounce">👑</div>
                                 </div>
                                 <p className="text-3xl font-black text-slate-800 mb-2">{winner.name} Wins!</p>
-                                <p className="text-indigo-500 font-bold text-xl">Score: {winner.score}</p>
+                                <p className="text-indigo-500 font-bold text-xl">Final Score: {winner.score}</p>
                             </div>
                         ) : (
                             <div>
@@ -77,10 +79,10 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
     }
 
     return (
-        <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-between overflow-hidden relative`}>
+        <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-between overflow-hidden relative transition-colors duration-500 ${isSpeedRound && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
             {/* Background Image */}
             {bg.image && (
-                <div className="absolute inset-0 z-0">
+                <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isSpeedRound ? 'opacity-70' : 'opacity-100'}`}>
                     <Image
                         src={bg.image}
                         alt={bg.name}
@@ -88,20 +90,19 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                         className="object-cover"
                         priority
                     />
-                    {/* Overlay to ensure readability */}
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                    <div className={`absolute inset-0 transition-colors duration-500 ${isSpeedRound ? 'bg-indigo-900/40' : 'bg-black/30'} backdrop-blur-[1px]`} />
                 </div>
             )}
 
-            {/* Background Flair (Floating particles) */}
+            {/* Background Flair */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40 z-1">
-                <div className="absolute top-10 left-10 text-6xl animate-pulse">✨</div>
+                <div className={`absolute top-10 left-10 text-6xl animate-pulse ${isSpeedRound ? 'text-yellow-400' : ''}`}>✨</div>
                 <div className="absolute bottom-20 right-20 text-5xl animate-pulse delay-700">💫</div>
                 <div className="absolute top-1/4 right-1/4 text-4xl animate-bounce">⭐</div>
             </div>
 
             {/* Header / Scoreboard */}
-            <header className="flex justify-between items-center max-w-5xl mx-auto w-full mb-8 relative z-10">
+            <header className="flex justify-between items-center max-w-5xl mx-auto w-full mb-8 relative z-10 pt-2">
                 <div className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}>
                     <Character id={player1.characterId} size="md" className="shadow-lg" />
                     <div>
@@ -110,11 +111,21 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     </div>
                 </div>
 
-                <div className="text-center">
-                    <div className="bg-black/40 px-8 py-3 rounded-full backdrop-blur-md border-2 border-white/20 shadow-2xl">
-                        <span className="font-bold text-slate-300 text-xs tracking-[0.2em] block mb-1 uppercase">Round</span>
-                        <p className="text-4xl font-black text-white leading-tight">{round}<span className="text-slate-400 text-2xl">/{MAX_ROUNDS}</span></p>
+                <div className="text-center relative">
+                    <div className={`bg-black/40 px-10 py-4 rounded-3xl backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : 'border-white/20 shadow-2xl'}`}>
+                        <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase ${isSpeedRound ? 'text-yellow-400' : 'text-slate-300'}`}>
+                            {isSpeedRound ? '⚡ SPEED ROUND ⚡' : 'Normal Round'}
+                        </span>
+                        <p className="text-4xl font-black text-white leading-tight">
+                            {round}<span className="text-slate-400 text-2xl">/{isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
+                        </p>
                     </div>
+
+                    {isSpeedRound && !feedback && !isThinking && (
+                        <div className={`mt-4 mx-auto w-24 h-24 rounded-full border-8 bg-black/60 backdrop-blur-md flex items-center justify-center transition-all duration-300 ${timeLeft < 5 ? 'border-rose-500 text-rose-500 scale-125 animate-bounce' : 'border-white text-white'}`}>
+                            <span className="text-4xl font-black">{timeLeft}s</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}>
@@ -140,18 +151,20 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
 
                 {/* Feedback Overlay */}
                 {feedback && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-auto">
-                        <div className={`p-8 rounded-[3rem] shadow-2xl text-center transform animate-in zoom-in fade-in slide-in-from-bottom-8 duration-300 border-8 border-white/20 backdrop-blur-md ${feedback.isCorrect ? 'bg-green-500' : 'bg-rose-500'} max-w-2xl w-full mx-4`}>
+                    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-auto bg-black/40 backdrop-blur-sm">
+                        <div className={`p-8 rounded-[3rem] shadow-2xl text-center transform animate-in zoom-in fade-in slide-in-from-bottom-8 duration-300 border-8 border-white/20 backdrop-blur-md ${feedback.isCorrect ? 'bg-green-500 shadow-green-500/50' : 'bg-rose-500 shadow-rose-500/50'} max-w-2xl w-full mx-4`}>
                             <div className="text-7xl mb-2 animate-bounce">
-                                {feedback.isCorrect ? '🎉' : '💥'}
+                                {feedback.isCorrect ? '🎉' : feedback.isTimeout ? '⏰' : '💥'}
                             </div>
                             <h2 className="text-5xl font-black text-white mb-4 drop-shadow-md">
-                                {feedback.isCorrect ? 'AWESOME!' : 'OOPS!'}
+                                {feedback.isCorrect ? 'AWESOME!' : feedback.isTimeout ? 'TIME OUT!' : 'OOPS!'}
                             </h2>
 
                             {!feedback.isCorrect && feedback.steps && (
                                 <div className="bg-white/10 rounded-2xl p-6 text-left max-h-[50vh] overflow-y-auto custom-scrollbar shadow-inner">
-                                    <p className="text-white font-bold text-xl mb-4 border-b border-white/20 pb-2">Let&apos;s solve this:</p>
+                                    <p className="text-white font-bold text-xl mb-4 border-b border-white/20 pb-2">
+                                        {feedback.isTimeout ? "You ran out of time! Here's how to solve it:" : "Let's solve this:"}
+                                    </p>
                                     <ul className="space-y-4">
                                         {feedback.steps.map((step, i) => (
                                             <li key={i} className="text-white font-medium text-lg flex gap-3 leading-snug">
@@ -185,12 +198,12 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     </div>
                 )}
 
-                <div className="w-full max-w-2xl transition-all duration-500">
+                <div className={`w-full max-w-2xl transition-all duration-500 ${isSpeedRound && timeLeft < 5 && !feedback ? 'animate-shake' : ''}`}>
                     {currentProblem && (
                         <div className={`${(currentTurn === 'p2' && player2.type === 'computer') || isThinking ? 'opacity-40 scale-95 filter blur-[2px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
                             {!feedback && (
                                 <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4">
-                                    <span className={`inline-block px-8 py-3 rounded-full font-black text-xl uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white'}`}>
+                                    <span className={`inline-block px-8 py-3 rounded-full font-black text-xl uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black ring-4 ring-black/10 animate-pulse' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
                                         {isThinking ? 'Processing...' : (currentTurn === 'p1' ? player1.name + "'s Turn" : player2.name + "'s Turn")}
                                     </span>
                                 </div>
@@ -216,8 +229,19 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
             </main>
 
             <footer className="text-center text-white/40 text-xs font-black p-4 relative z-10 uppercase tracking-[0.3em]">
-                Ten Fractions • {bg.name} Arena • Difficulty {game.difficulty}
+                Ten Fractions • {bg.name} Arena • {isSpeedRound ? 'Lightning Phase' : 'Normal Phase'}
             </footer>
+
+            <style jsx global>{`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+          }
+          .animate-shake {
+            animation: shake 0.1s ease-in-out infinite;
+          }
+       `}</style>
         </div>
     );
 };

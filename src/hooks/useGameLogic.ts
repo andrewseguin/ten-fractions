@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MAX_ROUNDS, POINTS_PER_DIFFICULTY, PlayerType } from '@/lib/constants';
 import { generateProblem, compareFractions, Fraction, addFractions, subtractFractions, multiplyFractions, divideFractions } from '@/lib/fractions';
 import { generateAIAnswer, shouldAIError } from '@/lib/ai';
@@ -33,39 +33,47 @@ export const useGameLogic = () => {
     const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
     const [isThinking, setIsThinking] = useState(false);
 
+    // Speed Round States
+    const [isSpeedRound, setIsSpeedRound] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(20);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctVal: any; steps?: string[] } | null>(null);
-
-    const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number) => {
-        setPlayer1({ ...player1, name: p1Name, characterId: p1Char, score: 0 });
-        const newP2 = { ...player2, name: p2Name, type: p2Type, characterId: p2Char, score: 0 };
-        setPlayer2(newP2);
-        setDifficulty(diff);
-        setRound(1);
-        setCurrentTurn('p1');
-        setGameState('PLAYING');
-
-        const prob = generateProblem(diff);
-        setCurrentProblem(prob);
-        setFeedback(null);
-        setIsThinking(false);
-    };
+    const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctVal: any; steps?: string[]; isTimeout?: boolean } | null>(null);
 
     const advanceTurn = useCallback(() => {
         setFeedback(null);
 
         const nextTurn = currentTurn === 'p1' ? 'p2' : 'p1';
 
+        // Transition Logic: Round 1-10 (Normal), then Round 11-? (Speed)
         if (currentTurn === 'p2' && round >= MAX_ROUNDS) {
-            setGameState('GAME_OVER');
-            setIsThinking(false);
+            if (!isSpeedRound) {
+                // Start Speed Round (Phase 2)
+                setIsSpeedRound(true);
+                setRound(11);
+                setCurrentTurn('p1');
+                setTimeLeft(20);
+                const nextProb = generateProblem(difficulty);
+                setCurrentProblem(nextProb);
+                setIsThinking(false);
+            } else if (round >= MAX_ROUNDS + 5) {
+                setGameState('GAME_OVER');
+                setIsThinking(false);
+            } else {
+                setRound(prev => prev + 1);
+                setCurrentTurn('p1');
+                setTimeLeft(20);
+                const nextProb = generateProblem(difficulty);
+                setCurrentProblem(nextProb);
+            }
         } else {
             if (currentTurn === 'p2') {
                 setRound(prev => prev + 1);
             }
             setCurrentTurn(nextTurn);
+            setTimeLeft(20);
 
-            // Start thinking if it's the bot's turn
             if (nextTurn === 'p2' && player2.type === 'computer') {
                 setIsThinking(true);
             } else {
@@ -75,7 +83,47 @@ export const useGameLogic = () => {
             const nextProb = generateProblem(difficulty);
             setCurrentProblem(nextProb);
         }
-    }, [currentTurn, round, difficulty, player2.type]);
+    }, [currentTurn, round, difficulty, player2.type, isSpeedRound]);
+
+    const handleTimeout = useCallback(() => {
+        if (!currentProblem || feedback || !isSpeedRound) return;
+
+        const { f1, f2, operation } = currentProblem;
+        const steps = getStepByStep(f1, f2, operation);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let correctVal: any;
+        switch (operation) {
+            case '+': correctVal = addFractions(f1, f2); break;
+            case '-': correctVal = subtractFractions(f1, f2); break;
+            case '*': correctVal = multiplyFractions(f1, f2); break;
+            case '/': correctVal = divideFractions(f1, f2); break;
+            case 'compare': correctVal = compareFractions(f1, f2); break;
+        }
+
+        setFeedback({ isCorrect: false, correctVal, steps, isTimeout: true });
+
+        setTimeout(() => {
+            advanceTurn();
+        }, 3000);
+    }, [currentProblem, feedback, isSpeedRound, advanceTurn]);
+
+    const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number) => {
+        setPlayer1({ ...player1, name: p1Name, characterId: p1Char, score: 0 });
+        const newP2 = { ...player2, name: p2Name, type: p2Type, characterId: p2Char, score: 0 };
+        setPlayer2(newP2);
+        setDifficulty(diff);
+        setRound(1);
+        setCurrentTurn('p1');
+        setGameState('PLAYING');
+        setIsSpeedRound(false);
+        setTimeLeft(20);
+
+        const prob = generateProblem(diff);
+        setCurrentProblem(prob);
+        setFeedback(null);
+        setIsThinking(false);
+    };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkAnswer = useCallback((answer: any) => {
@@ -107,7 +155,8 @@ export const useGameLogic = () => {
 
         setFeedback({ isCorrect, correctVal, steps });
 
-        const points = isCorrect ? POINTS_PER_DIFFICULTY[difficulty as keyof typeof POINTS_PER_DIFFICULTY] : 0;
+        const multiplier = isSpeedRound ? 2 : 1;
+        const points = isCorrect ? POINTS_PER_DIFFICULTY[difficulty as keyof typeof POINTS_PER_DIFFICULTY] * multiplier : 0;
 
         if (currentTurn === 'p1') {
             setPlayer1(prev => ({ ...prev, score: prev.score + points }));
@@ -124,26 +173,44 @@ export const useGameLogic = () => {
         }
 
         return { isCorrect, correctVal };
-    }, [currentProblem, feedback, difficulty, currentTurn, player2.type, advanceTurn]);
+    }, [currentProblem, feedback, difficulty, currentTurn, player2.type, advanceTurn, isSpeedRound]);
 
-    // AI Turn handling - only does the SUBMIT part, thinking state is managed by turn transitions
+    // Speed Round Timer Effect
+    useEffect(() => {
+        if (gameState === 'PLAYING' && isSpeedRound && !feedback && !isThinking) {
+            timerRef.current = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) {
+                        if (timerRef.current) clearInterval(timerRef.current);
+                        handleTimeout();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => {
+                if (timerRef.current) clearInterval(timerRef.current);
+            };
+        }
+    }, [gameState, isSpeedRound, feedback, isThinking, handleTimeout]);
+
+    // AI Turn handling
     useEffect(() => {
         if (gameState === 'PLAYING' && currentTurn === 'p2' && player2.type === 'computer' && currentProblem && !feedback && isThinking) {
-            const thinkingTime = 2000 + Math.random() * 2000;
+            const thinkingTime = isSpeedRound
+                ? 1500 + Math.random() * 1000
+                : 2000 + Math.random() * 2000;
 
             const timer = setTimeout(() => {
                 const shouldErr = shouldAIError(difficulty);
                 const aiAns = generateAIAnswer(currentProblem.f1, currentProblem.f2, currentProblem.operation, difficulty, shouldErr);
-                // Note: setIsThinking(false) will happen inside checkAnswer -> advanceTurn (after delay) 
-                // or we can set it false right before checkAnswer if we want the bubble to disappear immediately.
-                // Let's set it false right before so the bot stops pulsating before submitting.
                 setIsThinking(false);
                 checkAnswer(aiAns);
             }, thinkingTime);
 
             return () => clearTimeout(timer);
         }
-    }, [gameState, currentTurn, currentProblem, player2.type, difficulty, feedback, isThinking, checkAnswer]);
+    }, [gameState, currentTurn, currentProblem, player2.type, difficulty, feedback, isThinking, checkAnswer, isSpeedRound]);
 
     return {
         gameState,
@@ -155,6 +222,8 @@ export const useGameLogic = () => {
         currentProblem,
         feedback,
         isThinking,
+        isSpeedRound,
+        timeLeft,
         startGame,
         checkAnswer,
         advanceTurn,

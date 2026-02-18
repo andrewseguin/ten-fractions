@@ -29,6 +29,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
         feedback,
         isThinking,
         isSpeedRound,
+        isMountainMode,
         timeLeft,
         checkAnswer,
         resetGame,
@@ -79,7 +80,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
     }
 
     return (
-        <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-between overflow-hidden relative transition-colors duration-500 ${isSpeedRound && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
+        <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-between overflow-hidden relative transition-colors duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
             {/* Background Image */}
             {bg.image && (
                 <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isSpeedRound ? 'opacity-70' : 'opacity-100'}`}>
@@ -94,41 +95,73 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                 </div>
             )}
 
-            {/* Background Flair */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40 z-1">
-                <div className={`absolute top-10 left-10 text-6xl animate-pulse ${isSpeedRound ? 'text-yellow-400' : ''}`}>✨</div>
-                <div className="absolute bottom-20 right-20 text-5xl animate-pulse delay-700">💫</div>
-                <div className="absolute top-1/4 right-1/4 text-4xl animate-bounce">⭐</div>
+            {/* Moving Background Objects */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
+                {/* Clouds for Mountain/Castle */}
+                {(bgId === 'mountain' || bgId === 'castle') && (
+                    <>
+                        <div className="absolute top-[10%] left-[-10%] text-7xl animate-move-horizontal opacity-60 transition-all duration-[30s]" style={{ animationDuration: '35s' }}>☁️</div>
+                        <div className="absolute top-[25%] left-[-20%] text-6xl animate-move-horizontal opacity-40 transition-all duration-[45s]" style={{ animationDuration: '50s', animationDelay: '5s' }}>☁️</div>
+                        <div className="absolute top-[15%] right-[-10%] text-8xl animate-move-horizontal-reverse opacity-50" style={{ animationDuration: '40s' }}>☁️</div>
+                    </>
+                )}
+
+                {/* Birds/Notes for Concert/Dinoland */}
+                {bgId === 'concert' && (
+                    <>
+                        <div className="absolute top-1/4 left-1/4 text-4xl animate-float opacity-80">🎵</div>
+                        <div className="absolute top-1/3 right-1/4 text-5xl animate-float-delayed opacity-70">🎶</div>
+                        <div className="absolute bottom-1/4 left-1/2 text-3xl animate-bounce-slow opacity-60">🎸</div>
+                    </>
+                )}
+
+                {bgId === 'dinoland' && (
+                    <>
+                        <div className="absolute top-10 right-[-10%] text-5xl animate-move-horizontal-reverse opacity-80" style={{ animationDuration: '20s' }}>🦅</div>
+                        <div className="absolute top-1/4 left-[-10%] text-4xl animate-move-horizontal opacity-70" style={{ animationDuration: '25s', animationDelay: '2s' }}>🦖</div>
+                    </>
+                )}
+
+                {/* Generic Sparkles */}
+                <div className="absolute top-10 left-10 text-4xl animate-pulse opacity-50">✨</div>
+                <div className="absolute bottom-20 right-20 text-3xl animate-pulse delay-700 opacity-40">💫</div>
             </div>
 
             {/* Header / Scoreboard */}
             <header className="flex justify-between items-center max-w-5xl mx-auto w-full mb-8 relative z-10 pt-2">
-                <div className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}>
+                <div
+                    className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
+                    style={isMountainMode ? { transform: `translateY(${-player1.elevation}px)` } : {}}
+                >
                     <Character id={player1.characterId} size="md" className="shadow-lg" />
                     <div>
                         <p className="font-bold text-sm text-blue-200 uppercase tracking-widest mb-1">{player1.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>
+                        {isMountainMode && <p className="text-xs font-black text-yellow-400">⛰️ {player1.elevation}m</p>}
                     </div>
                 </div>
 
                 <div className="text-center relative">
-                    <div className={`bg-black/40 px-10 py-4 rounded-3xl backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : 'border-white/20 shadow-2xl'}`}>
-                        <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase ${isSpeedRound ? 'text-yellow-400' : 'text-slate-300'}`}>
-                            {isSpeedRound ? '⚡ SPEED ROUND ⚡' : 'Normal Round'}
+                    <div className={`bg-black/40 px-10 py-4 rounded-3xl backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400' : 'border-white/20 shadow-2xl'}`}>
+                        <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
+                            {isSpeedRound ? '⚡ SPEED ROUND ⚡' : isMountainMode ? '🧗 MOUNTAIN CLIMB 🧗' : 'Normal Round'}
                         </span>
                         <p className="text-4xl font-black text-white leading-tight">
-                            {round}<span className="text-slate-400 text-2xl">/{isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
+                            {round}<span className="text-slate-400 text-2xl">/{isMountainMode ? MAX_ROUNDS + 10 : isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
                         </p>
                     </div>
 
-                    {isSpeedRound && !feedback && !isThinking && (
+                    {(isSpeedRound || isMountainMode) && !feedback && !isThinking && (
                         <div className={`mt-4 mx-auto w-24 h-24 rounded-full border-8 bg-black/60 backdrop-blur-md flex items-center justify-center transition-all duration-300 ${timeLeft < 5 ? 'border-rose-500 text-rose-500 scale-125 animate-bounce' : 'border-white text-white'}`}>
                             <span className="text-4xl font-black">{timeLeft}s</span>
                         </div>
                     )}
                 </div>
 
-                <div className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}>
+                <div
+                    className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
+                    style={isMountainMode ? { transform: `translateY(${-player2.elevation}px)` } : {}}
+                >
                     <div className="relative">
                         <Character id={player2.characterId} size="md" className={`shadow-lg ${isThinking ? 'animate-pulse scale-110' : ''}`} />
                         {isThinking && (
@@ -142,6 +175,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     <div className="text-right">
                         <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
+                        {isMountainMode && <p className="text-xs font-black text-yellow-400">⛰️ {player2.elevation}m</p>}
                     </div>
                 </div>
             </header>
@@ -159,6 +193,12 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                             <h2 className="text-5xl font-black text-white mb-4 drop-shadow-md">
                                 {feedback.isCorrect ? 'AWESOME!' : feedback.isTimeout ? 'TIME OUT!' : 'OOPS!'}
                             </h2>
+
+                            {isMountainMode && (
+                                <p className="text-white/90 text-2xl font-black mb-6 animate-pulse">
+                                    {feedback.isCorrect ? 'CLIMBING UP! 🧗' : 'SLIDING DOWN! ⛷️'}
+                                </p>
+                            )}
 
                             {!feedback.isCorrect && feedback.steps && (
                                 <div className="bg-white/10 rounded-2xl p-6 text-left max-h-[50vh] overflow-y-auto custom-scrollbar shadow-inner">
@@ -198,12 +238,12 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     </div>
                 )}
 
-                <div className={`w-full max-w-2xl transition-all duration-500 ${isSpeedRound && timeLeft < 5 && !feedback ? 'animate-shake' : ''}`}>
+                <div className={`w-full max-w-2xl transition-all duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 && !feedback ? 'animate-shake' : ''}`}>
                     {currentProblem && (
                         <div className={`${(currentTurn === 'p2' && player2.type === 'computer') || isThinking ? 'opacity-40 scale-95 filter blur-[2px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
                             {!feedback && (
                                 <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4">
-                                    <span className={`inline-block px-8 py-3 rounded-full font-black text-xl uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black ring-4 ring-black/10 animate-pulse' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
+                                    <span className={`inline-block px-8 py-3 rounded-full font-black text-xl uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black ring-4 ring-black/10 animate-pulse' : isMountainMode ? 'bg-sky-500 text-white' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
                                         {isThinking ? 'Processing...' : (currentTurn === 'p1' ? player1.name + "'s Turn" : player2.name + "'s Turn")}
                                     </span>
                                 </div>
@@ -229,14 +269,45 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
             </main>
 
             <footer className="text-center text-white/40 text-xs font-black p-4 relative z-10 uppercase tracking-[0.3em]">
-                Ten Fractions • {bg.name} Arena • {isSpeedRound ? 'Lightning Phase' : 'Normal Phase'}
+                Ten Fractions • {bg.name} Arena • {isSpeedRound ? 'Lightning Phase' : isMountainMode ? 'Elevation Phase' : 'Normal Phase'}
             </footer>
 
             <style jsx global>{`
+          @keyframes move-horizontal {
+            from { transform: translateX(0); }
+            to { transform: translateX(120vw); }
+          }
+          @keyframes move-horizontal-reverse {
+            from { transform: translateX(0); }
+            to { transform: translateX(-120vw); }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+          }
+          @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
           @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
             75% { transform: translateX(4px); }
+          }
+          .animate-move-horizontal {
+            animation: move-horizontal linear infinite;
+          }
+          .animate-move-horizontal-reverse {
+            animation: move-horizontal-reverse linear infinite;
+          }
+          .animate-float {
+            animation: float 4s ease-in-out infinite;
+          }
+          .animate-float-delayed {
+            animation: float 6s ease-in-out infinite 1s;
+          }
+          .animate-bounce-slow {
+            animation: bounce-slow 3s ease-in-out infinite;
           }
           .animate-shake {
             animation: shake 0.1s ease-in-out infinite;

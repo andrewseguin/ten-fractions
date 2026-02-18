@@ -125,8 +125,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                 {/* Settings Area */}
                 <div className="mt-10 bg-slate-50/50 p-6 rounded-[2.5rem] border-4 border-slate-100 shadow-inner">
                     <div className="grid md:grid-cols-2 gap-10">
-                        <div>
-                            <h3 className="font-black text-slate-400 mb-4 tracking-[0.2em] text-xs uppercase">Choose Skill Level</h3>
+                        <div className={bgId === 'mountain' ? 'opacity-40 pointer-events-none' : ''}>
+                            <h3 className="font-black text-slate-400 mb-4 tracking-[0.2em] text-xs uppercase flex justify-between">
+                                Choose Skill Level
+                                {bgId === 'mountain' && <span className="text-sky-500">Auto-Scaling</span>}
+                            </h3>
                             <div className="flex gap-4">
                                 {[1, 2, 3].map(d => (
                                     <Button
@@ -142,7 +145,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                         </div>
 
                         <div>
-                            <h3 className="font-black text-slate-400 mb-4 tracking-[0.2em] text-xs uppercase">Select Arena</h3>
+                            <h3 className="font-black text-slate-400 mb-4 tracking-[0.2em] text-xs uppercase flex justify-between">
+                                Select Arena
+                                {bgId === 'mountain' && <span className="text-sky-500 font-black">📈 PROGRESSIVE</span>}
+                            </h3>
                             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x">
                                 {BACKGROUNDS.map(bg => (
                                     <button
@@ -157,6 +163,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                                         <div className="absolute bottom-1 left-0 w-full text-[10px] font-black text-white text-center drop-shadow-md tracking-tighter uppercase whitespace-nowrap px-1">
                                             {bg.name}
                                         </div>
+                                        {bg.id === 'mountain' && <div className="absolute top-1 right-1 text-xs">🔥</div>}
                                     </button>
                                 ))}
                             </div>
@@ -167,7 +174,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                 <div className="mt-10">
                     <Button size="lg" className="group w-full text-3xl py-8 shadow-[0_15px_40px_-5px_rgba(79,70,229,0.5)] hover:shadow-[0_20px_50px_-5px_rgba(79,70,229,0.7)] hover:-translate-y-2 transition-all bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 border-b-[12px] border-indigo-900 active:border-b-0 active:translate-y-2 rounded-[2.5rem]" onClick={handleStart}>
                         <span className="group-hover:animate-bounce inline-block mr-4">🚀</span>
-                        BATTLE START!
+                        {bgId === 'mountain' ? 'CLIMB START!' : 'BATTLE START!'}
                         <span className="group-hover:animate-bounce inline-block ml-4 delay-75">🔥</span>
                     </Button>
                 </div>

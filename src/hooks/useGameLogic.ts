@@ -12,6 +12,7 @@ export type Player = {
     type: PlayerType;
     score: number;
     characterId: string;
+    elevation: number; // For Mountain Mode
 };
 
 export type Problem = {
@@ -26,30 +27,49 @@ export const useGameLogic = () => {
     const [round, setRound] = useState(1);
     const [difficulty, setDifficulty] = useState(1);
 
-    const [player1, setPlayer1] = useState<Player>({ id: 'p1', name: 'Player 1', type: 'human', score: 0, characterId: 'hero1' });
-    const [player2, setPlayer2] = useState<Player>({ id: 'p2', name: 'Computer', type: 'computer', score: 0, characterId: 'hero2' });
+    const [player1, setPlayer1] = useState<Player>({ id: 'p1', name: 'Player 1', type: 'human', score: 0, characterId: 'hero1', elevation: 0 });
+    const [player2, setPlayer2] = useState<Player>({ id: 'p2', name: 'Computer', type: 'computer', score: 0, characterId: 'hero2', elevation: 0 });
 
     const [currentTurn, setCurrentTurn] = useState<'p1' | 'p2'>('p1');
     const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
     const [isThinking, setIsThinking] = useState(false);
 
-    // Speed Round States
     const [isSpeedRound, setIsSpeedRound] = useState(false);
     const [timeLeft, setTimeLeft] = useState(20);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+    const [isMountainMode, setIsMountainMode] = useState(false);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctVal: any; steps?: string[]; isTimeout?: boolean } | null>(null);
+
+    const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number, bgId?: string) => {
+        const mountainMode = bgId === 'mountain';
+        setIsMountainMode(mountainMode);
+
+        setPlayer1({ id: 'p1', name: p1Name, characterId: p1Char, score: 0, elevation: 0, type: 'human' });
+        setPlayer2({ id: 'p2', name: p2Name, type: p2Type, characterId: p2Char, score: 0, elevation: 0 });
+
+        setDifficulty(mountainMode ? 1 : diff); // Mountain mode starts at ease and scales
+        setRound(1);
+        setCurrentTurn('p1');
+        setGameState('PLAYING');
+        setIsSpeedRound(false);
+        setTimeLeft(20);
+
+        const prob = generateProblem(mountainMode ? 1 : diff);
+        setCurrentProblem(prob);
+        setFeedback(null);
+        setIsThinking(false);
+    };
 
     const advanceTurn = useCallback(() => {
         setFeedback(null);
 
         const nextTurn = currentTurn === 'p1' ? 'p2' : 'p1';
 
-        // Transition Logic: Round 1-10 (Normal), then Round 11-? (Speed)
-        if (currentTurn === 'p2' && round >= MAX_ROUNDS) {
+        if (currentTurn === 'p2' && round >= MAX_ROUNDS && !isMountainMode) {
             if (!isSpeedRound) {
-                // Start Speed Round (Phase 2)
                 setIsSpeedRound(true);
                 setRound(11);
                 setCurrentTurn('p1');
@@ -67,6 +87,9 @@ export const useGameLogic = () => {
                 const nextProb = generateProblem(difficulty);
                 setCurrentProblem(nextProb);
             }
+        } else if (isMountainMode && round >= MAX_ROUNDS + 10) { // Mountain mode lasts 20 rounds
+            setGameState('GAME_OVER');
+            setIsThinking(false);
         } else {
             if (currentTurn === 'p2') {
                 setRound(prev => prev + 1);
@@ -83,10 +106,10 @@ export const useGameLogic = () => {
             const nextProb = generateProblem(difficulty);
             setCurrentProblem(nextProb);
         }
-    }, [currentTurn, round, difficulty, player2.type, isSpeedRound]);
+    }, [currentTurn, round, difficulty, player2.type, isSpeedRound, isMountainMode]);
 
     const handleTimeout = useCallback(() => {
-        if (!currentProblem || feedback || !isSpeedRound) return;
+        if (!currentProblem || feedback || (!isSpeedRound && !isMountainMode)) return;
 
         const { f1, f2, operation } = currentProblem;
         const steps = getStepByStep(f1, f2, operation);
@@ -103,27 +126,19 @@ export const useGameLogic = () => {
 
         setFeedback({ isCorrect: false, correctVal, steps, isTimeout: true });
 
+        // In Mountain Mode, timeout moves you down
+        if (isMountainMode) {
+            if (currentTurn === 'p1') {
+                setPlayer1(prev => ({ ...prev, elevation: Math.max(0, prev.elevation - 10) }));
+            } else {
+                setPlayer2(prev => ({ ...prev, elevation: Math.max(0, prev.elevation - 10) }));
+            }
+        }
+
         setTimeout(() => {
             advanceTurn();
         }, 3000);
-    }, [currentProblem, feedback, isSpeedRound, advanceTurn]);
-
-    const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number) => {
-        setPlayer1({ ...player1, name: p1Name, characterId: p1Char, score: 0 });
-        const newP2 = { ...player2, name: p2Name, type: p2Type, characterId: p2Char, score: 0 };
-        setPlayer2(newP2);
-        setDifficulty(diff);
-        setRound(1);
-        setCurrentTurn('p1');
-        setGameState('PLAYING');
-        setIsSpeedRound(false);
-        setTimeLeft(20);
-
-        const prob = generateProblem(diff);
-        setCurrentProblem(prob);
-        setFeedback(null);
-        setIsThinking(false);
-    };
+    }, [currentProblem, feedback, isSpeedRound, isMountainMode, currentTurn, advanceTurn]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkAnswer = useCallback((answer: any) => {
@@ -152,32 +167,46 @@ export const useGameLogic = () => {
         }
 
         const steps = !isCorrect ? getStepByStep(f1, f2, operation) : undefined;
-
         setFeedback({ isCorrect, correctVal, steps });
 
         const multiplier = isSpeedRound ? 2 : 1;
         const points = isCorrect ? POINTS_PER_DIFFICULTY[difficulty as keyof typeof POINTS_PER_DIFFICULTY] * multiplier : 0;
 
         if (currentTurn === 'p1') {
-            setPlayer1(prev => ({ ...prev, score: prev.score + points }));
+            setPlayer1(prev => {
+                const newElevation = isMountainMode ? (isCorrect ? prev.elevation + 10 : Math.max(0, prev.elevation - 10)) : 0;
+                return { ...prev, score: prev.score + points, elevation: newElevation };
+            });
         } else {
-            setPlayer2(prev => ({ ...prev, score: prev.score + points }));
+            setPlayer2(prev => {
+                const newElevation = isMountainMode ? (isCorrect ? prev.elevation + 10 : Math.max(0, prev.elevation - 10)) : 0;
+                return { ...prev, score: prev.score + points, elevation: newElevation };
+            });
+        }
+
+        // Difficulty scaling for Mountain Mode
+        if (isMountainMode) {
+            const maxElevation = Math.max(player1.elevation, player2.elevation);
+            if (maxElevation > 60) setDifficulty(3);
+            else if (maxElevation > 30) setDifficulty(2);
+            else setDifficulty(1);
         }
 
         const isComputer = currentTurn === 'p2' && player2.type === 'computer';
 
-        if (isCorrect || isComputer) {
+        if (isCorrect || isComputer || feedback?.isTimeout) {
             setTimeout(() => {
                 advanceTurn();
             }, 2000);
         }
 
         return { isCorrect, correctVal };
-    }, [currentProblem, feedback, difficulty, currentTurn, player2.type, advanceTurn, isSpeedRound]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentProblem, feedback, difficulty, currentTurn, player2.type, advanceTurn, isSpeedRound, isMountainMode, player1.elevation, player2.elevation]);
 
-    // Speed Round Timer Effect
     useEffect(() => {
-        if (gameState === 'PLAYING' && isSpeedRound && !feedback && !isThinking) {
+        // Timer for Speed Round OR Mountain Round (20s)
+        if (gameState === 'PLAYING' && (isSpeedRound || isMountainMode) && !feedback && !isThinking) {
             timerRef.current = setInterval(() => {
                 setTimeLeft(prev => {
                     if (prev <= 1) {
@@ -192,12 +221,11 @@ export const useGameLogic = () => {
                 if (timerRef.current) clearInterval(timerRef.current);
             };
         }
-    }, [gameState, isSpeedRound, feedback, isThinking, handleTimeout]);
+    }, [gameState, isSpeedRound, isMountainMode, feedback, isThinking, handleTimeout]);
 
-    // AI Turn handling
     useEffect(() => {
         if (gameState === 'PLAYING' && currentTurn === 'p2' && player2.type === 'computer' && currentProblem && !feedback && isThinking) {
-            const thinkingTime = isSpeedRound
+            const thinkingTime = (isSpeedRound || isMountainMode)
                 ? 1500 + Math.random() * 1000
                 : 2000 + Math.random() * 2000;
 
@@ -210,7 +238,7 @@ export const useGameLogic = () => {
 
             return () => clearTimeout(timer);
         }
-    }, [gameState, currentTurn, currentProblem, player2.type, difficulty, feedback, isThinking, checkAnswer, isSpeedRound]);
+    }, [gameState, currentTurn, currentProblem, player2.type, difficulty, feedback, isThinking, checkAnswer, isSpeedRound, isMountainMode]);
 
     return {
         gameState,
@@ -223,6 +251,7 @@ export const useGameLogic = () => {
         feedback,
         isThinking,
         isSpeedRound,
+        isMountainMode,
         timeLeft,
         startGame,
         checkAnswer,

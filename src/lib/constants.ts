@@ -22,8 +22,9 @@ export const CHARACTERS = [
 ];
 
 export const BACKGROUNDS = [
+    { id: 'mountain', name: 'Mountain Climb', css: 'bg-sky-400', image: '/assets/mountain.png' },
     { id: 'concert', name: 'Concert', css: 'bg-indigo-600', image: '/assets/concert.png' },
     { id: 'dinoland', name: 'Dinoland', css: 'bg-emerald-600', image: '/assets/dinoland.png' },
     { id: 'castle', name: 'Castle', css: 'bg-sky-400', image: '/assets/castle.png' },
-    { id: 'space', name: 'Space', css: 'bg-slate-900', image: null }, // Fallback to CSS
+    { id: 'space', name: 'Space', css: 'bg-slate-900', image: null },
 ];

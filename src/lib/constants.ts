@@ -19,6 +19,8 @@ export const CHARACTERS = [
     { id: 'robot2', name: 'Mecha-Bit', color: 'bg-cyan-500', image: '/assets/robot2.png', type: 'robot' },
     { id: 'dino1', name: 'Rexy', color: 'bg-green-600', image: '/assets/dino1.png', type: 'dino' },
     { id: 'dino2', name: 'Tri-Horn', color: 'bg-purple-600', image: '/assets/dino2.png', type: 'dino' },
+    { id: 'climber-m', name: 'Alex', color: 'bg-orange-500', image: '/assets/climber-m.png', type: 'climber' },
+    { id: 'climber-f', name: 'Mia', color: 'bg-rose-500', image: '/assets/climber-f.png', type: 'climber' },
 ];
 
 export const BACKGROUNDS = [

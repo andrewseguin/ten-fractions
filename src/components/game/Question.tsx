@@ -81,7 +81,7 @@ export const Question: React.FC<QuestionProps> = ({ f1, f2, operation, onAnswer,
                         type="number"
                         value={numInput}
                         onChange={e => setNumInput(e.target.value)}
-                        className="w-24 text-center font-black text-3xl border-b-4 border-slate-300 focus:border-indigo-500 outline-none bg-transparent placeholder-slate-300"
+                        className="w-24 text-center font-black text-3xl outline-none bg-transparent placeholder-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="?"
                         disabled={disabled}
                     />
@@ -90,7 +90,7 @@ export const Question: React.FC<QuestionProps> = ({ f1, f2, operation, onAnswer,
                         type="number"
                         value={denomInput}
                         onChange={e => setDenomInput(e.target.value)}
-                        className="w-24 text-center font-black text-3xl border-b-4 border-slate-300 focus:border-indigo-500 outline-none bg-transparent placeholder-slate-300"
+                        className="w-24 text-center font-black text-3xl outline-none bg-transparent placeholder-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="?"
                         disabled={disabled}
                     />

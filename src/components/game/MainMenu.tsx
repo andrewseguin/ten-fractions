@@ -20,6 +20,8 @@ interface MainMenuProps {
 }
 
 export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
+    const [view, setView] = useState<'MODE_SELECT' | 'SETTINGS'>('MODE_SELECT');
+
     const [p1Name, setP1Name] = useState('Hero');
     const [p1Char, setP1Char] = useState(CHARACTERS[0].id);
 
@@ -28,7 +30,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
     const [p2Char, setP2Char] = useState(CHARACTERS[2].id);
 
     const [difficulty, setDifficulty] = useState(1);
-    const [bgId, setBgId] = useState('mountain'); // Default to mountain now
+    const [bgId, setBgId] = useState('mountain');
+
+    const handleSelectMode = (id: string) => {
+        setBgId(id);
+        setView('SETTINGS');
+    };
 
     const handleStart = () => {
         onStart({
@@ -42,34 +49,80 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
         });
     };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-sky-400 to-indigo-600 flex items-center justify-center p-4">
-            <Card className="max-w-4xl w-full border-8 border-yellow-400 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-white/95 backdrop-blur-md overflow-hidden">
-                {/* New Prominent Top Section for Mode */}
-                <div className="bg-indigo-700 p-8 text-center relative">
-                    <h1 className="text-6xl sm:text-7xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">
-                        TEN FRACTIONS
-                    </h1>
-                    <div className="flex justify-center gap-4 mt-6">
-                        <button
-                            onClick={() => setBgId('mountain')}
-                            className={`px-8 py-4 rounded-3xl font-black text-xl transition-all border-b-8 active:border-b-0 active:translate-y-2 ${bgId === 'mountain' ? 'bg-sky-400 text-white border-sky-600 shadow-xl scale-105' : 'bg-white/10 text-white/60 border-transparent hover:bg-white/20'}`}
-                        >
-                            🧗 MOUNTAIN CLIMB
-                            <span className="block text-xs uppercase tracking-widest opacity-80">Progressive Challenge</span>
-                        </button>
-                        <button
-                            onClick={() => setBgId('concert')} // Just pick concert as the "Battle" default
-                            className={`px-8 py-4 rounded-3xl font-black text-xl transition-all border-b-8 active:border-b-0 active:translate-y-2 ${bgId !== 'mountain' ? 'bg-indigo-400 text-white border-indigo-600 shadow-xl scale-105' : 'bg-white/10 text-white/60 border-transparent hover:bg-white/20'}`}
-                        >
-                            ⚔️ CLASSIC BATTLE
-                            <span className="block text-xs uppercase tracking-widest opacity-80">Fixed Difficulty</span>
-                        </button>
+    if (view === 'MODE_SELECT') {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-sky-400 to-indigo-600 flex items-center justify-center p-4">
+                <div className="max-w-5xl w-full">
+                    <div className="text-center mb-12 animate-in fade-in slide-in-from-top-8 duration-700">
+                        <h1 className="text-7xl sm:text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">
+                            TEN FRACTIONS
+                        </h1>
+                        <p className="text-white/80 font-black tracking-[0.4em] uppercase text-lg">🤖 Robots vs Dinosaurs 🦖</p>
                     </div>
 
-                    {/* Animated clouds in header */}
-                    <div className="absolute top-4 left-10 text-4xl animate-pulse opacity-40">☁️</div>
-                    <div className="absolute top-10 right-20 text-5xl animate-bounce opacity-30">☁️</div>
+                    <div className="grid md:grid-cols-2 gap-8 animate-in zoom-in fade-in duration-500 delay-200">
+                        {/* Mountain Climb Card */}
+                        <button
+                            onClick={() => handleSelectMode('mountain')}
+                            className="group relative h-[450px] rounded-[3rem] overflow-hidden border-8 border-white/20 hover:border-sky-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-95"
+                        >
+                            <Image src="/assets/mountain.png" alt="Mountain" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-sky-900/90 via-sky-900/40 to-transparent" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-end p-10 text-center">
+                                <span className="bg-sky-400 text-white px-6 py-2 rounded-full font-black text-sm uppercase tracking-widest mb-4 shadow-xl">The Hero&apos;s Journey</span>
+                                <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">MOUNTAIN CLIMB</h2>
+                                <p className="text-sky-100 font-bold mb-6 text-lg">Climb to the peak as problems get harder! 🏔️🧗</p>
+                                <div className="bg-white text-sky-600 px-8 py-4 rounded-2xl font-black text-xl shadow-2xl group-hover:bg-sky-50 transition-colors">START JOURNEY 👉</div>
+                            </div>
+                            <div className="absolute top-6 right-6 text-5xl animate-pulse opacity-40">☁️</div>
+                        </button>
+
+                        {/* Classic Battle Card */}
+                        <button
+                            onClick={() => handleSelectMode('concert')}
+                            className="group relative h-[450px] rounded-[3rem] overflow-hidden border-8 border-white/20 hover:border-indigo-400 transition-all shadow-2xl hover:scale-[1.02] active:scale-95"
+                        >
+                            <Image src="/assets/concert.png" alt="Concert" fill className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-70" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/90 via-indigo-900/40 to-transparent" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-end p-10 text-center">
+                                <span className="bg-indigo-400 text-white px-6 py-2 rounded-full font-black text-sm uppercase tracking-widest mb-4 shadow-xl">Head-to-Head</span>
+                                <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">CLASSIC BATTLE</h2>
+                                <p className="text-indigo-100 font-bold mb-6 text-lg">Choose your arena and fight for points! ⚔️🎸</p>
+                                <div className="bg-white text-indigo-600 px-8 py-4 rounded-2xl font-black text-xl shadow-2xl group-hover:bg-indigo-50 transition-colors">CHOOSE ARENA 👉</div>
+                            </div>
+                            <div className="absolute top-6 left-6 text-5xl animate-bounce-slow opacity-40">🎵</div>
+                        </button>
+                    </div>
+                </div>
+
+                <style jsx>{`
+                    @keyframes bounce-slow {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-15px); }
+                    }
+                    .animate-bounce-slow {
+                        animation: bounce-slow 4s ease-in-out infinite;
+                    }
+                `}</style>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-b from-sky-400 to-indigo-600 flex items-center justify-center p-4">
+            <Card className="max-w-4xl w-full border-8 border-yellow-400 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-white/95 backdrop-blur-md overflow-hidden animate-in zoom-in duration-500">
+                {/* Header with Back Button */}
+                <div className={`p-8 text-center relative ${bgId === 'mountain' ? 'bg-sky-600' : 'bg-indigo-700'}`}>
+                    <button
+                        onClick={() => setView('MODE_SELECT')}
+                        className="absolute top-6 left-6 bg-white/10 hover:bg-white/20 text-white p-3 rounded-2xl font-black transition-all flex items-center gap-2"
+                    >
+                        👈 BACK
+                    </button>
+                    <h2 className="text-4xl font-black text-white mb-1 tracking-tighter drop-shadow-md">
+                        {bgId === 'mountain' ? '🏔️ MOUNTAIN CLIMB SETTINGS' : '⚔️ BATTLE SETTINGS'}
+                    </h2>
+                    <p className="text-white/60 font-black text-xs uppercase tracking-[0.3em]">Configure Your Heroes</p>
                 </div>
 
                 <div className="p-8">
@@ -77,7 +130,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                         {/* Player 1 Settings */}
                         <div className="bg-blue-50/50 p-6 rounded-[2.5rem] border-4 border-blue-100 shadow-inner">
                             <h2 className="text-2xl font-black text-blue-600 mb-6 flex items-center gap-3">
-                                <span className="bg-white p-2 rounded-xl shadow-sm text-lg">🤖</span> CHOOSE HERO
+                                <span className="bg-white p-2 rounded-xl shadow-sm text-lg">🤖</span> HERO NAME
                             </h2>
                             <div className="mb-6">
                                 <input
@@ -143,7 +196,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                         </div>
                     </div>
 
-                    {/* Arena Selection Area (Dynamic based on Mode) */}
+                    {/* Arena selection (Only for Classic Battle) */}
                     <div className="bg-slate-50/50 p-6 rounded-[2.5rem] border-4 border-slate-100 shadow-inner">
                         {bgId === 'mountain' ? (
                             <div className="flex flex-col md:flex-row items-center gap-8 animate-in fade-in slide-in-from-top-4">
@@ -151,16 +204,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                                     <Image src="/assets/mountain.png" alt="Mountain" fill className="object-cover" />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-3xl font-black text-sky-600 mb-2">🏔️ MOUNTAIN MODE ACTIVE</h3>
+                                    <h3 className="text-2xl font-black text-sky-600 mb-2">🏔️ PROGRESSIVE CLIMB</h3>
                                     <p className="text-slate-500 font-bold leading-relaxed">
-                                        In this mode, you climb the peak by getting answers right!
-                                        Difficulty increases automatically as you go higher. 📈
+                                        You&apos;ll start at Level 1 and scale up to Level 3 as you climb higher!
                                     </p>
-                                    <div className="mt-4 flex gap-4">
-                                        <span className="bg-sky-100 text-sky-600 px-4 py-2 rounded-full text-xs font-black uppercase">Level 1: 0-30m</span>
-                                        <span className="bg-sky-200 text-sky-700 px-4 py-2 rounded-full text-xs font-black uppercase">Level 2: 30-60m</span>
-                                        <span className="bg-sky-300 text-sky-800 px-4 py-2 rounded-full text-xs font-black uppercase">Level 3: 60m+</span>
-                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -214,7 +261,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                             <span className="group-hover:animate-bounce inline-block mr-4 text-4xl">
                                 {bgId === 'mountain' ? '🧗' : '🚀'}
                             </span>
-                            {bgId === 'mountain' ? 'CLIMB TO THE PEAK!' : 'BATTLE START!'}
+                            {bgId === 'mountain' ? 'START CLIMB!' : 'BATTLE START!'}
                             <span className="group-hover:animate-bounce inline-block ml-4 delay-75 text-4xl">
                                 {bgId === 'mountain' ? '🏔️' : '🔥'}
                             </span>

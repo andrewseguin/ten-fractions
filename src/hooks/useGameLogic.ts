@@ -4,7 +4,6 @@ import { generateProblem, compareFractions, Fraction, addFractions, subtractFrac
 import { generateAIAnswer, shouldAIError } from '@/lib/ai';
 import { getStepByStep } from '@/lib/steps';
 
-// ... types (GameState, Player, Problem) same as before ... 
 export type GameState = 'MENU' | 'PLAYING' | 'GAME_OVER';
 
 export type Player = {
@@ -32,44 +31,51 @@ export const useGameLogic = () => {
 
     const [currentTurn, setCurrentTurn] = useState<'p1' | 'p2'>('p1');
     const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
+    const [isThinking, setIsThinking] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctVal: any; steps?: string[] } | null>(null);
 
     const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number) => {
         setPlayer1({ ...player1, name: p1Name, characterId: p1Char, score: 0 });
-        setPlayer2({ ...player2, name: p2Name, type: p2Type, characterId: p2Char, score: 0 });
+        const newP2 = { ...player2, name: p2Name, type: p2Type, characterId: p2Char, score: 0 };
+        setPlayer2(newP2);
         setDifficulty(diff);
         setRound(1);
         setCurrentTurn('p1');
         setGameState('PLAYING');
 
-        // To ensure fresh random state not connected to render
         const prob = generateProblem(diff);
         setCurrentProblem(prob);
         setFeedback(null);
+        setIsThinking(false);
     };
 
     const advanceTurn = useCallback(() => {
         setFeedback(null);
 
-        // Note: Using functional state updates where possible to avoid dependency issues if we were to wrap this further,
-        // but since we read 'currentTurn' and 'round' to make decisions, they must be deps.
+        const nextTurn = currentTurn === 'p1' ? 'p2' : 'p1';
+
         if (currentTurn === 'p2' && round >= MAX_ROUNDS) {
             setGameState('GAME_OVER');
+            setIsThinking(false);
         } else {
             if (currentTurn === 'p2') {
                 setRound(prev => prev + 1);
-                setCurrentTurn('p1');
-            } else {
-                setCurrentTurn('p2');
             }
-            // We need the NEXT difficulty if it changed? No, diff is constant for game.
-            // But we need to use 'difficulty' state which is in scope.
+            setCurrentTurn(nextTurn);
+
+            // Start thinking if it's the bot's turn
+            if (nextTurn === 'p2' && player2.type === 'computer') {
+                setIsThinking(true);
+            } else {
+                setIsThinking(false);
+            }
+
             const nextProb = generateProblem(difficulty);
             setCurrentProblem(nextProb);
         }
-    }, [currentTurn, round, difficulty]);
+    }, [currentTurn, round, difficulty, player2.type]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkAnswer = useCallback((answer: any) => {
@@ -109,42 +115,35 @@ export const useGameLogic = () => {
             setPlayer2(prev => ({ ...prev, score: prev.score + points }));
         }
 
-        // Auto-advance if correct OR if computer
         const isComputer = currentTurn === 'p2' && player2.type === 'computer';
 
         if (isCorrect || isComputer) {
             setTimeout(() => {
-                // We need to call the LATEST advanceTurn.
-                // Since checkAnswer depends on advanceTurn, and advanceTurn changes when state changes...
-                // This closure might capture an old advanceTurn?
-                // Actually checkAnswer is recreated when advanceTurn changes.
-                // But setTimeout executes later.
-                // It should be fine as long as the logic inside advanceTurn uses the state at that time? 
-                // PRO TIP: When using setTimeout with state, refs are often better.
-                // But here, advanceTurn depends on state.
-                // We can just call the function.
-                // However, inside the timeout, 'advanceTurn' refers to the one in THIS scope.
-                // If the user clicks fast, multiple timeouts?
-                // 'feedback' guard prevents re-entry.
                 advanceTurn();
             }, 2000);
         }
 
         return { isCorrect, correctVal };
-    }, [currentProblem, feedback, difficulty, currentTurn, player2.type, advanceTurn]); // removed player1/player2 object deps, used specific props if needed or just setter
+    }, [currentProblem, feedback, difficulty, currentTurn, player2.type, advanceTurn]);
 
-    // AI Turn handling
+    // AI Turn handling - only does the SUBMIT part, thinking state is managed by turn transitions
     useEffect(() => {
-        // guard feedback too
-        if (gameState === 'PLAYING' && currentTurn === 'p2' && player2.type === 'computer' && currentProblem && !feedback) {
+        if (gameState === 'PLAYING' && currentTurn === 'p2' && player2.type === 'computer' && currentProblem && !feedback && isThinking) {
+            const thinkingTime = 2000 + Math.random() * 2000;
+
             const timer = setTimeout(() => {
                 const shouldErr = shouldAIError(difficulty);
                 const aiAns = generateAIAnswer(currentProblem.f1, currentProblem.f2, currentProblem.operation, difficulty, shouldErr);
+                // Note: setIsThinking(false) will happen inside checkAnswer -> advanceTurn (after delay) 
+                // or we can set it false right before checkAnswer if we want the bubble to disappear immediately.
+                // Let's set it false right before so the bot stops pulsating before submitting.
+                setIsThinking(false);
                 checkAnswer(aiAns);
-            }, 2000 + Math.random() * 1000);
+            }, thinkingTime);
+
             return () => clearTimeout(timer);
         }
-    }, [gameState, currentTurn, currentProblem, player2.type, difficulty, feedback, checkAnswer]);
+    }, [gameState, currentTurn, currentProblem, player2.type, difficulty, feedback, isThinking, checkAnswer]);
 
     return {
         gameState,
@@ -155,6 +154,7 @@ export const useGameLogic = () => {
         currentTurn,
         currentProblem,
         feedback,
+        isThinking,
         startGame,
         checkAnswer,
         advanceTurn,

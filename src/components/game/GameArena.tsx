@@ -25,6 +25,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game }) => {
         currentTurn,
         currentProblem,
         feedback,
+        isThinking,
         checkAnswer,
         resetGame,
         advanceTurn
@@ -99,7 +100,16 @@ export const GameArena: React.FC<GameArenaProps> = ({ game }) => {
                 </div>
 
                 <div className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/20 backdrop-blur-sm grayscale opacity-80'}`}>
-                    <Character id={player2.characterId} size="md" className="shadow-lg" />
+                    <div className="relative">
+                        <Character id={player2.characterId} size="md" className={`shadow-lg ${isThinking ? 'animate-pulse scale-110' : ''}`} />
+                        {isThinking && (
+                            <div className="absolute -top-12 -left-8 animate-bounce">
+                                <div className="bg-white text-indigo-600 font-black px-4 py-2 rounded-2xl shadow-lg relative after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white">
+                                    Thinking...
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <div className="text-right">
                         <p className="font-bold text-lg text-rose-200 uppercase tracking-wider">{player2.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
@@ -146,10 +156,6 @@ export const GameArena: React.FC<GameArenaProps> = ({ game }) => {
                                 </div>
                             )}
 
-                            {/* Only show Continue button if it's NOT correct (because correct auto-advances) OR if it's the computer's turn? 
-                        Actually, useGameLogic auto-advances correct answers.
-                        So if feedback is present and visible, it implies we are WAITING (i.e. incorrect answer).
-                    */}
                             {!feedback.isCorrect && (
                                 <div className="mt-8">
                                     <Button onClick={advanceTurn} size="lg" className="bg-white text-rose-600 hover:bg-rose-50 text-xl w-full shadow-lg">
@@ -163,12 +169,19 @@ export const GameArena: React.FC<GameArenaProps> = ({ game }) => {
 
                 <div className="w-full max-w-2xl transition-all duration-500">
                     {currentProblem && (
-                        <div className={`${currentTurn === 'p2' && player2.type === 'computer' ? 'opacity-60 scale-95 filter blur-[1px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
+                        <div className={`${(currentTurn === 'p2' && player2.type === 'computer') || isThinking ? 'opacity-60 scale-95 filter blur-[1px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
                             {!feedback && (
                                 <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4">
                                     <span className={`inline-block px-6 py-2 rounded-full font-black text-xl uppercase tracking-widest shadow-lg ${currentTurn === 'p1' ? 'bg-blue-500 text-white' : 'bg-rose-500 text-white'}`}>
-                                        {currentTurn === 'p1' ? `${player1.name}'s Turn` : `${player2.name}'s Turn`}
+                                        {isThinking ? 'Processing...' : (currentTurn === 'p1' ? `${player1.name}'s Turn` : `${player2.name}'s Turn`)}
                                     </span>
+                                </div>
+                            )}
+
+                            {isThinking && (
+                                <div className="absolute inset-0 flex items-center justify-center z-20">
+                                    <div className="bg-white/10 p-12 rounded-full animate-ping h-32 w-32 border-4 border-white"></div>
+                                    <div className="absolute text-6xl transform animate-spin">⚙️</div>
                                 </div>
                             )}
 
@@ -177,7 +190,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game }) => {
                                 f2={currentProblem.f2}
                                 operation={currentProblem.operation}
                                 onAnswer={checkAnswer}
-                                disabled={!!feedback || (currentTurn === 'p2' && player2.type === 'computer')}
+                                disabled={!!feedback || (currentTurn === 'p2' && player2.type === 'computer') || isThinking}
                             />
                         </div>
                     )}

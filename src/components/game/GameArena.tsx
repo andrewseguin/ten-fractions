@@ -79,6 +79,17 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
         );
     }
 
+    // Calculate vertical ascent for mountain mode (0-100m scaling to 200px offset)
+    const getElevationStyle = (elevation: number) => {
+        if (!isMountainMode) return {};
+        // Start near bottom of the header area or a dedicated track
+        // We'll translate UP based on progress
+        return {
+            transform: `translateY(${-elevation * 3}px)`, // Scale 100m to 300px climb
+            transition: 'transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        };
+    };
+
     return (
         <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-between overflow-hidden relative transition-colors duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
             {/* Background Image */}
@@ -127,22 +138,24 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                 <div className="absolute bottom-20 right-20 text-3xl animate-pulse delay-700 opacity-40">💫</div>
             </div>
 
-            {/* Header / Scoreboard */}
-            <header className="flex justify-between items-center max-w-5xl mx-auto w-full mb-8 relative z-10 pt-2">
+            {/* Header / Scoreboard + Mountain Tracker */}
+            <header className="flex justify-between items-center max-w-5xl mx-auto w-full mb-8 relative z-10 pt-12">
+
+                {/* Player 1 Card (Climbing) */}
                 <div
                     className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
-                    style={isMountainMode ? { transform: `translateY(${-player1.elevation}px)` } : {}}
+                    style={getElevationStyle(player1.elevation)}
                 >
                     <Character id={player1.characterId} size="md" className="shadow-lg" />
                     <div>
                         <p className="font-bold text-sm text-blue-200 uppercase tracking-widest mb-1">{player1.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-yellow-400">⛰️ {player1.elevation}m</p>}
+                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1">⛰️ {player1.elevation}m</p>}
                     </div>
                 </div>
 
                 <div className="text-center relative">
-                    <div className={`bg-black/40 px-10 py-4 rounded-3xl backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400' : 'border-white/20 shadow-2xl'}`}>
+                    <div className={`bg-black/60 px-10 py-4 rounded-3xl backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400 ring-4 ring-sky-400/20' : 'border-white/20 shadow-2xl'}`}>
                         <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
                             {isSpeedRound ? '⚡ SPEED ROUND ⚡' : isMountainMode ? '🧗 MOUNTAIN CLIMB 🧗' : 'Normal Round'}
                         </span>
@@ -158,9 +171,10 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     )}
                 </div>
 
+                {/* Player 2 Card (Climbing) */}
                 <div
                     className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
-                    style={isMountainMode ? { transform: `translateY(${-player2.elevation}px)` } : {}}
+                    style={getElevationStyle(player2.elevation)}
                 >
                     <div className="relative">
                         <Character id={player2.characterId} size="md" className={`shadow-lg ${isThinking ? 'animate-pulse scale-110' : ''}`} />
@@ -175,7 +189,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     <div className="text-right">
                         <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-yellow-400">⛰️ {player2.elevation}m</p>}
+                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1">⛰️ {player2.elevation}m</p>}
                     </div>
                 </div>
             </header>

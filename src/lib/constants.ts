@@ -28,5 +28,6 @@ export const BACKGROUNDS = [
     { id: 'concert', name: 'Concert', css: 'bg-indigo-600', image: '/assets/concert.png' },
     { id: 'dinoland', name: 'Dinoland', css: 'bg-emerald-600', image: '/assets/dinoland.png' },
     { id: 'castle', name: 'Castle', css: 'bg-sky-400', image: '/assets/castle.png' },
-    { id: 'space', name: 'Space', css: 'bg-slate-900', image: null },
+    { id: 'space', name: 'Space Station', css: 'bg-slate-900', image: '/assets/space.png' },
+    { id: 'deepsea', name: 'Deep Sea', css: 'bg-cyan-900', image: '/assets/deepsea.png' },
 ];

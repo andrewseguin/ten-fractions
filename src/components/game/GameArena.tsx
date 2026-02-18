@@ -131,6 +131,23 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     </>
                 )}
 
+                {bgId === 'space' && (
+                    <>
+                        <div className="absolute top-[10%] right-[20%] text-2xl animate-spin-slow opacity-60">🛸</div>
+                        <div className="absolute top-1/2 left-[10%] text-3xl animate-float-slow opacity-50">🛰️</div>
+                        <div className="absolute bottom-[20%] right-[10%] text-4xl animate-float opacity-40">✨</div>
+                    </>
+                )}
+
+                {bgId === 'deepsea' && (
+                    <>
+                        <div className="absolute bottom-[-10%] left-1/4 text-2xl animate-bubble opacity-40">🫧</div>
+                        <div className="absolute bottom-[-20%] left-1/3 text-3xl animate-bubble opacity-60" style={{ animationDelay: '1s' }}>🫧</div>
+                        <div className="absolute bottom-[-15%] right-1/4 text-2xl animate-bubble opacity-50" style={{ animationDelay: '2s' }}>🫧</div>
+                        <div className="absolute top-1/2 right-[5%] text-4xl animate-move-horizontal-reverse opacity-70" style={{ animationDuration: '15s' }}>🐠</div>
+                    </>
+                )}
+
                 <div className="absolute top-10 left-10 text-4xl animate-pulse opacity-50">✨</div>
                 <div className="absolute bottom-20 right-20 text-3xl animate-pulse delay-700 opacity-40">💫</div>
             </div>
@@ -318,6 +335,28 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
             75% { transform: translateX(4px); }
+          }
+          @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes float-slow {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-30px) translateX(20px); }
+          }
+          @keyframes bubble {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+          }
+          .animate-spin-slow {
+            animation: spin-slow 20s linear infinite;
+          }
+          .animate-float-slow {
+            animation: float-slow 10s ease-in-out infinite;
+          }
+          .animate-bubble {
+            animation: bubble 8s ease-in linear infinite;
           }
           .animate-move-horizontal {
             animation: move-horizontal linear infinite;

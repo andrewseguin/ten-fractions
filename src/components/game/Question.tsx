@@ -15,21 +15,31 @@ interface QuestionProps {
 }
 
 export const Question: React.FC<QuestionProps> = ({ f1, f2, operation, onAnswer, disabled }) => {
+    const [wholeInput, setWholeInput] = useState('');
     const [numInput, setNumInput] = useState('');
     const [denomInput, setDenomInput] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!numInput || !denomInput) return;
+
+        const w = parseInt(wholeInput) || 0;
+        const n = parseInt(numInput);
+        const d = parseInt(denomInput);
+
+        // Convert mixed number to improper fraction: (whole * denom + num) / denom
         onAnswer({
-            numerator: parseInt(numInput),
-            denominator: parseInt(denomInput)
+            numerator: w * d + n,
+            denominator: d
         });
+
+        setWholeInput('');
         setNumInput('');
         setDenomInput('');
     };
 
     if (operation === 'compare') {
+        // ... (rest of the compare logic - unchanged)
         return (
             <Card className="text-center border-8 border-yellow-300 shadow-xl bg-white/95">
                 <h3 className="text-2xl font-black text-slate-400 mb-6 uppercase tracking-widest">Which is bigger?</h3>
@@ -76,24 +86,40 @@ export const Question: React.FC<QuestionProps> = ({ f1, f2, operation, onAnswer,
 
                 <div className="text-slate-400 text-4xl">=</div>
 
-                <div className="flex flex-col items-center gap-2 bg-yellow-50 p-4 rounded-2xl border-4 border-yellow-200">
-                    <input
-                        type="number"
-                        value={numInput}
-                        onChange={e => setNumInput(e.target.value)}
-                        className="w-24 text-center font-black text-3xl outline-none bg-transparent placeholder-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="?"
-                        disabled={disabled}
-                    />
-                    <div className="w-full h-1.5 bg-slate-800 rounded-full"></div>
-                    <input
-                        type="number"
-                        value={denomInput}
-                        onChange={e => setDenomInput(e.target.value)}
-                        className="w-24 text-center font-black text-3xl outline-none bg-transparent placeholder-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="?"
-                        disabled={disabled}
-                    />
+                <div className="flex items-center gap-3">
+                    {/* Whole Number Space */}
+                    <div className="flex flex-col items-center bg-blue-50 p-4 rounded-2xl border-4 border-blue-200">
+                        <input
+                            type="number"
+                            value={wholeInput}
+                            onChange={e => setWholeInput(e.target.value)}
+                            className="w-16 text-center font-black text-3xl outline-none bg-transparent placeholder-blue-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            placeholder="?"
+                            disabled={disabled}
+                        />
+                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Whole</span>
+                    </div>
+
+                    {/* Fraction Parts */}
+                    <div className="flex flex-col items-center gap-2 bg-yellow-50 p-4 rounded-2xl border-4 border-yellow-200">
+                        <input
+                            type="number"
+                            value={numInput}
+                            onChange={e => setNumInput(e.target.value)}
+                            className="w-20 text-center font-black text-3xl outline-none bg-transparent placeholder-yellow-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            placeholder="?"
+                            disabled={disabled}
+                        />
+                        <div className="w-full h-1.5 bg-slate-800 rounded-full"></div>
+                        <input
+                            type="number"
+                            value={denomInput}
+                            onChange={e => setDenomInput(e.target.value)}
+                            className="w-20 text-center font-black text-3xl outline-none bg-transparent placeholder-yellow-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            placeholder="?"
+                            disabled={disabled}
+                        />
+                    </div>
                 </div>
             </div>
             <Button disabled={disabled || !numInput || !denomInput} onClick={handleSubmit} size="lg" className="w-full text-xl py-4 bg-green-500 hover:bg-green-400 border-b-8 border-green-700 active:border-b-0 active:translate-y-2 disabled:bg-slate-300 disabled:border-slate-400">

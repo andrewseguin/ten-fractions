@@ -235,7 +235,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart }) => {
                                         Select Battleground
                                     </h3>
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x">
-                                        {BACKGROUNDS.filter(b => b.id !== 'mountain' && b.id !== 'space').map(bg => (
+                                        {BACKGROUNDS.filter(b => b.id !== 'mountain').map(bg => (
                                             <button
                                                 key={bg.id}
                                                 onClick={() => setBgId(bg.id)}

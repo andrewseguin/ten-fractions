@@ -153,7 +153,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
             </div>
 
             {/* Top Area: Status & Problem (The Peak Goal) */}
-            <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center gap-6 pt-4">
+            <div className="relative z-20 w-full max-w-5xl mx-auto flex flex-col items-center gap-6 pt-4 shrink-0">
                 {/* Round Info Banner */}
                 <div className={`bg-black/60 px-8 py-3 rounded-full backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400 ring-4 ring-sky-400/20' : 'border-white/20 shadow-2xl'}`}>
                     <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase text-center ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
@@ -202,16 +202,19 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                 )}
             </div>
 
-            {/* Mountain Path (Only in Mountain Mode) */}
+            {/* Spacer to push climbers to the bottom */}
+            <div className="flex-1 min-h-[100px]" />
+
+            {/* Mountain Path (Only in Mountain Mode - Needs to be full screen height) */}
             {isMountainMode && (
-                <div className="absolute inset-0 z-[5] pointer-events-none flex justify-between px-20">
+                <div className="absolute inset-x-0 bottom-0 top-0 z-[5] pointer-events-none flex justify-between px-20">
                     {/* Path 1 for Player 1 */}
                     <div className="h-full w-1 border-r-4 border-dashed border-white/20 relative">
-                        <div className="absolute top-0 left-[-8px] text-white/40 text-xs font-bold uppercase tracking-widest whitespace-nowrap -rotate-90 origin-left">THE PEAK 🏔️</div>
+                        <div className="absolute top-1/4 left-[-12px] text-white/40 text-xs font-bold uppercase tracking-[0.5em] whitespace-nowrap -rotate-90 origin-left">MOUNTAIN ASCENT</div>
                     </div>
                     {/* Path 2 for Player 2 */}
                     <div className="h-full w-1 border-r-4 border-dashed border-white/20 relative">
-                        <div className="absolute top-0 right-[-8px] text-white/40 text-xs font-bold uppercase tracking-widest whitespace-nowrap rotate-90 origin-right">THE PEAK 🏔️</div>
+                        <div className="absolute top-1/4 right-[-12px] text-white/40 text-xs font-bold uppercase tracking-[0.5em] whitespace-nowrap rotate-90 origin-right">MOUNTAIN ASCENT</div>
                     </div>
                 </div>
             )}
@@ -225,10 +228,10 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     style={getClimbStyle(player1.elevation)}
                 >
                     <Character id={player1.characterId} size="md" className="shadow-2xl" isClimbing={isMountainMode && player1.elevation < 100} />
-                    <div className={isMountainMode ? 'bg-black/40 p-3 rounded-2xl backdrop-blur-sm' : ''}>
+                    <div className={isMountainMode ? 'bg-black/60 p-4 rounded-3xl backdrop-blur-md border-2 border-white/20' : ''}>
                         <p className="font-bold text-sm text-blue-200 uppercase tracking-widest mb-1">{player1.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1 tracking-tighter">EL: {player1.elevation}m</p>}
+                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-sky-900/40 px-3 py-1 rounded-full inline-block mt-2 tracking-widest border border-sky-400/30">EL: {player1.elevation}m</p>}
                     </div>
                 </div>
 
@@ -247,10 +250,10 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                             </div>
                         )}
                     </div>
-                    <div className={`text-right ${isMountainMode ? 'bg-black/40 p-3 rounded-2xl backdrop-blur-sm' : ''}`}>
+                    <div className={`text-right ${isMountainMode ? 'bg-black/60 p-4 rounded-3xl backdrop-blur-md border-2 border-white/20' : ''}`}>
                         <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
                         <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1 tracking-tighter">EL: {player2.elevation}m</p>}
+                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-sky-900/40 px-3 py-1 rounded-full inline-block mt-2 tracking-widest border border-sky-400/30">EL: {player2.elevation}m</p>}
                     </div>
                 </div>
             </div>

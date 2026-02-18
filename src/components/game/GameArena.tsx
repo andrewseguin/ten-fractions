@@ -79,19 +79,19 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
         );
     }
 
-    // Calculate vertical ascent for mountain mode (0-100m scaling to 200px offset)
-    const getElevationStyle = (elevation: number) => {
+    // Calculate vertical ascent for mountain mode
+    const getClimbStyle = (elevation: number) => {
         if (!isMountainMode) return {};
-        // Start near bottom of the header area or a dedicated track
-        // We'll translate UP based on progress
+        // Start from a lower point and climb up
+        // Base translateY is 0 (at bottom of its area)
         return {
-            transform: `translateY(${-elevation * 3}px)`, // Scale 100m to 300px climb
+            transform: `translateY(${-elevation * 4.5}px)`, // More aggressive climb
             transition: 'transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
         };
     };
 
     return (
-        <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-between overflow-hidden relative transition-colors duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
+        <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-start overflow-hidden relative transition-colors duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
             {/* Background Image */}
             {bg.image && (
                 <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isSpeedRound ? 'opacity-70' : 'opacity-100'}`}>
@@ -108,16 +108,14 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
 
             {/* Moving Background Objects */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
-                {/* Clouds for Mountain/Castle */}
                 {(bgId === 'mountain' || bgId === 'castle') && (
                     <>
-                        <div className="absolute top-[10%] left-[-10%] text-7xl animate-move-horizontal opacity-60 transition-all duration-[30s]" style={{ animationDuration: '35s' }}>☁️</div>
-                        <div className="absolute top-[25%] left-[-20%] text-6xl animate-move-horizontal opacity-40 transition-all duration-[45s]" style={{ animationDuration: '50s', animationDelay: '5s' }}>☁️</div>
+                        <div className="absolute top-[10%] left-[-10%] text-7xl animate-move-horizontal opacity-60" style={{ animationDuration: '35s' }}>☁️</div>
+                        <div className="absolute top-[25%] left-[-20%] text-6xl animate-move-horizontal opacity-40" style={{ animationDuration: '50s', animationDelay: '5s' }}>☁️</div>
                         <div className="absolute top-[15%] right-[-10%] text-8xl animate-move-horizontal-reverse opacity-50" style={{ animationDuration: '40s' }}>☁️</div>
                     </>
                 )}
 
-                {/* Birds/Notes for Concert/Dinoland */}
                 {bgId === 'concert' && (
                     <>
                         <div className="absolute top-1/4 left-1/4 text-4xl animate-float opacity-80">🎵</div>
@@ -133,131 +131,29 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     </>
                 )}
 
-                {/* Generic Sparkles */}
                 <div className="absolute top-10 left-10 text-4xl animate-pulse opacity-50">✨</div>
                 <div className="absolute bottom-20 right-20 text-3xl animate-pulse delay-700 opacity-40">💫</div>
             </div>
 
-            {/* Header / Scoreboard + Mountain Tracker */}
-            <header className="flex justify-between items-center max-w-5xl mx-auto w-full mb-8 relative z-10 pt-12">
-
-                {/* Player 1 Card (Climbing) */}
-                <div
-                    className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
-                    style={getElevationStyle(player1.elevation)}
-                >
-                    <Character id={player1.characterId} size="md" className="shadow-lg" />
-                    <div>
-                        <p className="font-bold text-sm text-blue-200 uppercase tracking-widest mb-1">{player1.name}</p>
-                        <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1">⛰️ {player1.elevation}m</p>}
-                    </div>
+            {/* Top Area: Status & Problem (The Peak Goal) */}
+            <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center gap-6 pt-4">
+                {/* Round Info Banner */}
+                <div className={`bg-black/60 px-8 py-3 rounded-full backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400 ring-4 ring-sky-400/20' : 'border-white/20 shadow-2xl'}`}>
+                    <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase text-center ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
+                        {isSpeedRound ? '⚡ SPEED ROUND ⚡' : isMountainMode ? '🧗 MOUNTAIN CLIMB 🧗' : 'Normal Round'}
+                    </span>
+                    <p className="text-2xl font-black text-white leading-tight text-center">
+                        Round {round}<span className="text-slate-400 text-lg">/{isMountainMode ? MAX_ROUNDS + 10 : isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
+                    </p>
                 </div>
 
-                <div className="text-center relative">
-                    <div className={`bg-black/60 px-10 py-4 rounded-3xl backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400 ring-4 ring-sky-400/20' : 'border-white/20 shadow-2xl'}`}>
-                        <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
-                            {isSpeedRound ? '⚡ SPEED ROUND ⚡' : isMountainMode ? '🧗 MOUNTAIN CLIMB 🧗' : 'Normal Round'}
-                        </span>
-                        <p className="text-4xl font-black text-white leading-tight">
-                            {round}<span className="text-slate-400 text-2xl">/{isMountainMode ? MAX_ROUNDS + 10 : isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
-                        </p>
-                    </div>
-
-                    {(isSpeedRound || isMountainMode) && !feedback && !isThinking && (
-                        <div className={`mt-4 mx-auto w-24 h-24 rounded-full border-8 bg-black/60 backdrop-blur-md flex items-center justify-center transition-all duration-300 ${timeLeft < 5 ? 'border-rose-500 text-rose-500 scale-125 animate-bounce' : 'border-white text-white'}`}>
-                            <span className="text-4xl font-black">{timeLeft}s</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Player 2 Card (Climbing) */}
-                <div
-                    className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
-                    style={getElevationStyle(player2.elevation)}
-                >
-                    <div className="relative">
-                        <Character id={player2.characterId} size="md" className={`shadow-lg ${isThinking ? 'animate-pulse scale-110' : ''}`} />
-                        {isThinking && (
-                            <div className="absolute -top-12 -left-8 animate-bounce z-20">
-                                <div className="bg-white text-indigo-600 font-black px-4 py-2 rounded-2xl shadow-xl relative after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white">
-                                    Thinking...
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="text-right">
-                        <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
-                        <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1">⛰️ {player2.elevation}m</p>}
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Action Area */}
-            <main className="flex-1 flex items-center justify-center relative z-10 w-full mb-12">
-
-                {/* Feedback Overlay */}
-                {feedback && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-auto bg-black/40 backdrop-blur-sm">
-                        <div className={`p-8 rounded-[3rem] shadow-2xl text-center transform animate-in zoom-in fade-in slide-in-from-bottom-8 duration-300 border-8 border-white/20 backdrop-blur-md ${feedback.isCorrect ? 'bg-green-500 shadow-green-500/50' : 'bg-rose-500 shadow-rose-500/50'} max-w-2xl w-full mx-4`}>
-                            <div className="text-7xl mb-2 animate-bounce">
-                                {feedback.isCorrect ? '🎉' : feedback.isTimeout ? '⏰' : '💥'}
-                            </div>
-                            <h2 className="text-5xl font-black text-white mb-4 drop-shadow-md">
-                                {feedback.isCorrect ? 'AWESOME!' : feedback.isTimeout ? 'TIME OUT!' : 'OOPS!'}
-                            </h2>
-
-                            {isMountainMode && (
-                                <p className="text-white/90 text-2xl font-black mb-6 animate-pulse">
-                                    {feedback.isCorrect ? 'CLIMBING UP! 🧗' : 'SLIDING DOWN! ⛷️'}
-                                </p>
-                            )}
-
-                            {!feedback.isCorrect && feedback.steps && (
-                                <div className="bg-white/10 rounded-2xl p-6 text-left max-h-[50vh] overflow-y-auto custom-scrollbar shadow-inner">
-                                    <p className="text-white font-bold text-xl mb-4 border-b border-white/20 pb-2">
-                                        {feedback.isTimeout ? "You ran out of time! Here's how to solve it:" : "Let's solve this:"}
-                                    </p>
-                                    <ul className="space-y-4">
-                                        {feedback.steps.map((step, i) => (
-                                            <li key={i} className="text-white font-medium text-lg flex gap-3 leading-snug">
-                                                <span className="bg-white/20 h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">{i + 1}</span>
-                                                <span>{step}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    <div className="mt-8 pt-6 border-t border-white/20 flex items-center justify-center gap-6">
-                                        <p className="text-white/60 uppercase font-bold text-xs tracking-widest">The Correct Answer:</p>
-                                        <div className="bg-white text-indigo-600 p-4 rounded-3xl shadow-lg ring-4 ring-white/20">
-                                            {typeof feedback.correctVal === 'object' ? (
-                                                <FractionDisplay numerator={(feedback.correctVal as Fraction).numerator} denominator={(feedback.correctVal as Fraction).denominator} size="md" />
-                                            ) : (
-                                                <span className="text-3xl font-black px-4">{feedback.correctVal}</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {!feedback.isCorrect && (
-                                <div className="mt-8">
-                                    <Button onClick={advanceTurn} size="lg" className="bg-white text-rose-600 hover:bg-rose-50 text-2xl w-full shadow-2xl py-6 rounded-3xl">
-                                        GOT IT, NEXT! 👉
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
+                {/* The Problem (At the Peak for Mountain Mode) */}
                 <div className={`w-full max-w-2xl transition-all duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 && !feedback ? 'animate-shake' : ''}`}>
                     {currentProblem && (
                         <div className={`${(currentTurn === 'p2' && player2.type === 'computer') || isThinking ? 'opacity-40 scale-95 filter blur-[2px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
                             {!feedback && (
-                                <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4">
-                                    <span className={`inline-block px-8 py-3 rounded-full font-black text-xl uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black ring-4 ring-black/10 animate-pulse' : isMountainMode ? 'bg-sky-500 text-white' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
+                                <div className="text-center mb-4 animate-in fade-in slide-in-from-top-4">
+                                    <span className={`inline-block px-8 py-2 rounded-full font-black text-lg uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black animate-pulse' : isMountainMode ? 'bg-sky-500 text-white' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
                                         {isThinking ? 'Processing...' : (currentTurn === 'p1' ? player1.name + "'s Turn" : player2.name + "'s Turn")}
                                     </span>
                                 </div>
@@ -280,20 +176,121 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                         </div>
                     )}
                 </div>
-            </main>
 
-            <footer className="text-center text-white/40 text-xs font-black p-4 relative z-10 uppercase tracking-[0.3em]">
-                Ten Fractions • {bg.name} Arena • {isSpeedRound ? 'Lightning Phase' : isMountainMode ? 'Elevation Phase' : 'Normal Phase'}
+                {/* Timer (Floating near the problem) */}
+                {(isSpeedRound || isMountainMode) && !feedback && !isThinking && (
+                    <div className={`w-20 h-20 rounded-full border-8 bg-black/60 backdrop-blur-md flex items-center justify-center transition-all duration-300 ${timeLeft < 5 ? 'border-rose-500 text-rose-500 scale-125 animate-bounce' : 'border-white text-white'}`}>
+                        <span className="text-3xl font-black">{timeLeft}s</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Bottom Area: Climbers & Scores */}
+            <div className={`relative z-10 w-full max-w-5xl mx-auto flex justify-between items-end ${isMountainMode ? 'pb-24' : 'pb-12'}`}>
+
+                {/* Player 1 Card (Climbing up from bottom) */}
+                <div
+                    className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
+                    style={getClimbStyle(player1.elevation)}
+                >
+                    <Character id={player1.characterId} size="md" className="shadow-lg" />
+                    <div>
+                        <p className="font-bold text-sm text-blue-200 uppercase tracking-widest mb-1">{player1.name}</p>
+                        <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>
+                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1">⛰️ {player1.elevation}m</p>}
+                    </div>
+                </div>
+
+                {/* Player 2 Card (Climbing up from bottom) */}
+                <div
+                    className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'}`}
+                    style={getClimbStyle(player2.elevation)}
+                >
+                    <div className="relative">
+                        <Character id={player2.characterId} size="md" className={`shadow-lg ${isThinking ? 'animate-pulse scale-110' : ''}`} />
+                        {isThinking && (
+                            <div className="absolute -top-12 -left-8 animate-bounce z-20">
+                                <div className="bg-white text-indigo-600 font-black px-4 py-2 rounded-2xl shadow-xl relative after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white">
+                                    Thinking...
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="text-right">
+                        <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
+                        <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
+                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-black/40 px-2 py-0.5 rounded-full inline-block mt-1">⛰️ {player2.elevation}m</p>}
+                    </div>
+                </div>
+            </div>
+
+            {/* Feedback Overlay (Same as before but z-index to 100) */}
+            {feedback && (
+                <div className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-auto bg-black/60 backdrop-blur-md">
+                    <div className={`p-8 rounded-[3rem] shadow-2xl text-center transform animate-in zoom-in fade-in slide-in-from-bottom-8 duration-300 border-8 border-white/20 backdrop-blur-md ${feedback.isCorrect ? 'bg-green-500 shadow-green-500/50' : 'bg-rose-500 shadow-rose-500/50'} max-w-2xl w-full mx-4`}>
+                        <div className="text-7xl mb-2 animate-bounce">
+                            {feedback.isCorrect ? '🎉' : feedback.isTimeout ? '⏰' : '💥'}
+                        </div>
+                        <h2 className="text-5xl font-black text-white mb-4 drop-shadow-md">
+                            {feedback.isCorrect ? 'AWESOME!' : feedback.isTimeout ? 'TIME OUT!' : 'OOPS!'}
+                        </h2>
+
+                        {isMountainMode && (
+                            <p className="text-white/90 text-2xl font-black mb-6 animate-pulse">
+                                {feedback.isCorrect ? 'CLIMBING UP! 🧗' : 'SLIDING DOWN! ⛷️'}
+                            </p>
+                        )}
+
+                        {!feedback.isCorrect && feedback.steps && (
+                            <div className="bg-white/10 rounded-2xl p-6 text-left max-h-[50vh] overflow-y-auto custom-scrollbar shadow-inner">
+                                <p className="text-white font-bold text-xl mb-4 border-b border-white/20 pb-2">
+                                    {feedback.isTimeout ? "You ran out of time! Here's how to solve it:" : "Let's solve this:"}
+                                </p>
+                                <ul className="space-y-4">
+                                    {feedback.steps.map((step, i) => (
+                                        <li key={i} className="text-white font-medium text-lg flex gap-3 leading-snug">
+                                            <span className="bg-white/20 h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-sm">{i + 1}</span>
+                                            <span>{step}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className="mt-8 pt-6 border-t border-white/20 flex items-center justify-center gap-6">
+                                    <p className="text-white/60 uppercase font-bold text-xs tracking-widest">The Correct Answer:</p>
+                                    <div className="bg-white text-indigo-600 p-4 rounded-3xl shadow-lg ring-4 ring-white/20">
+                                        {typeof feedback.correctVal === 'object' ? (
+                                            <FractionDisplay numerator={(feedback.correctVal as Fraction).numerator} denominator={(feedback.correctVal as Fraction).denominator} size="md" />
+                                        ) : (
+                                            <span className="text-3xl font-black px-4">{feedback.correctVal}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {!feedback.isCorrect && (
+                            <div className="mt-8">
+                                <Button onClick={advanceTurn} size="lg" className="bg-white text-rose-600 hover:bg-rose-50 text-2xl w-full shadow-2xl py-6 rounded-3xl">
+                                    GOT IT, NEXT! 👉
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            <footer className="text-center text-white/20 text-[10px] font-black p-2 relative z-10 uppercase tracking-[0.4em]">
+                Ten Fractions • {bg.name} Arena • Elevation Mode
             </footer>
 
             <style jsx global>{`
           @keyframes move-horizontal {
-            from { transform: translateX(0); }
+            from { transform: translateX(-20vw); }
             to { transform: translateX(120vw); }
           }
           @keyframes move-horizontal-reverse {
-            from { transform: translateX(0); }
-            to { transform: translateX(-120vw); }
+            from { transform: translateX(120vw); }
+            to { transform: translateX(-20vw); }
           }
           @keyframes float {
             0%, 100% { transform: translateY(0) rotate(0); }

@@ -71,9 +71,15 @@ export const formatFraction = (f: Fraction): string => {
 
 // Difficulty levels: 1 (easy) to 3 (hard)
 export const generateFraction = (difficulty: number): Fraction => {
+    if (difficulty === 0) {
+        const denominator = Math.random() < 0.5 ? 2 : 4;
+        return { numerator: 1, denominator };
+    }
+
     let maxDenom = 5;
     if (difficulty === 2) maxDenom = 10;
     if (difficulty === 3) maxDenom = 20;
+    if (difficulty >= 4) maxDenom = 50;
 
     const denominator = Math.floor(Math.random() * (maxDenom - 1)) + 2; // 2 to maxDenom
     const numerator = Math.floor(Math.random() * (denominator * 2)) + 1; // Allow improper fractions
@@ -81,12 +87,18 @@ export const generateFraction = (difficulty: number): Fraction => {
     return simplifyFraction({ numerator, denominator });
 };
 
-export const generateProblem = (difficulty: number) => {
+export const generateProblem = (difficulty: number, specificOperation?: string) => {
     const operations = ['+', '-', '*', '/', 'compare'] as const;
-    const operation = operations[Math.floor(Math.random() * operations.length)];
+    let operation = (specificOperation && specificOperation !== 'mixed')
+        ? specificOperation as typeof operations[number]
+        : operations[Math.floor(Math.random() * operations.length)];
 
-    const d1 = difficulty;
-    const d2 = difficulty;
+    if (difficulty === 0) {
+        operation = 'compare';
+    }
+
+    const d1 = difficulty === -1 ? Math.floor(Math.random() * 4) + 1 : difficulty;
+    const d2 = difficulty === -1 ? Math.floor(Math.random() * 4) + 1 : difficulty;
 
     // if (difficulty === 1) { ... }
 

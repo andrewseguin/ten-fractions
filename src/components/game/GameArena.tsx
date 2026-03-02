@@ -10,6 +10,8 @@ import { Card } from '@/components/ui/Card';
 import { BACKGROUNDS as BG_CONSTANTS, MAX_ROUNDS } from '@/lib/constants';
 import { FractionDisplay } from './FractionDisplay';
 import { Fraction } from '@/lib/fractions';
+import confetti from 'canvas-confetti';
+import { FractionFeast } from './FractionFeast';
 
 type GameLogic = ReturnType<typeof useGameLogic>;
 
@@ -30,10 +32,26 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
         isThinking,
         isSpeedRound,
         isMountainMode,
+        isPracticeMode,
+        instructions,
+        visibleStepCount,
+        setVisibleStepCount,
+        showNextStep,
+        assessmentResult,
+        setAssessmentResult,
+        userReflectedAnswer,
+        setUserReflectedAnswer,
         timeLeft,
         checkAnswer,
         resetGame,
-        advanceTurn
+        advanceTurn,
+        skipToHardRound,
+        showMiniGameOffer,
+        setShowMiniGameOffer,
+        startMiniGame,
+        resolveMiniGame,
+        skipMiniGame,
+        miniGamePoints
     } = game;
 
     const bg = BG_CONSTANTS.find(b => b.id === bgId) || BG_CONSTANTS[0];
@@ -89,6 +107,23 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
             transition: 'transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
         };
     };
+
+    if (game.gameState === 'MINI_GAME') {
+        return (
+            <div className={`min-h-screen ${bg.css} p-8 flex items-center justify-center relative`}>
+                <div className="max-w-4xl w-full">
+                    <div className="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
+                        <h1 className="text-6xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">🍎 FRACTION FEAST! 🍎</h1>
+                        <p className="text-white/80 font-black tracking-widest uppercase text-xl">Catch as many treats as you can!</p>
+                    </div>
+                    <FractionFeast
+                        characterId={player1.characterId}
+                        onComplete={resolveMiniGame}
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`min-h-screen ${!bg.image ? bg.css : ''} text-white p-4 flex flex-col justify-start overflow-hidden relative transition-colors duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 ? 'bg-rose-900/40' : ''}`}>
@@ -170,54 +205,216 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                 <div className="absolute bottom-20 right-20 text-3xl animate-pulse delay-700 opacity-40">💫</div>
             </div>
 
+            {/* Navigation & Controls (Bottom Right) */}
+            <div className="absolute bottom-8 right-8 z-50 flex gap-4">
+                <button
+                    onClick={resetGame}
+                    className="group bg-black/40 hover:bg-black/60 backdrop-blur-md text-white/80 hover:text-white px-10 py-5 rounded-3xl font-black text-xl uppercase tracking-widest border-4 border-white/10 hover:border-white/30 transition-all flex items-center gap-4 shadow-2xl"
+                >
+                    <span className="text-3xl group-hover:scale-125 transition-transform">🏠</span>
+                    <span>HOME</span>
+                </button>
+            </div>
+
             {/* Top Area: Status & Problem (The Peak Goal) */}
-            <div className="relative z-20 w-full max-w-5xl mx-auto flex flex-col items-center gap-6 pt-4 shrink-0">
-                {/* Round Info Banner */}
-                <div className={`bg-black/60 px-8 py-3 rounded-full backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400 ring-4 ring-sky-400/20' : 'border-white/20 shadow-2xl'}`}>
-                    <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase text-center ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
-                        {isSpeedRound ? '⚡ SPEED ROUND ⚡' : isMountainMode ? '🧗 MOUNTAIN CLIMB 🧗' : 'Normal Round'}
-                    </span>
-                    <p className="text-2xl font-black text-white leading-tight text-center">
-                        Round {round}<span className="text-slate-400 text-lg">/{isMountainMode ? MAX_ROUNDS + 10 : isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
-                    </p>
-                </div>
+            <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 pt-4 shrink-0">
+                {/* Teacher Section (Only in Practice Mode) */}
+                {isPracticeMode && (
+                    <div className="w-full lg:w-1/3 flex flex-col items-center gap-4 animate-in slide-in-from-left-8 duration-700">
+                        <button
+                            onClick={showNextStep}
+                            className="group relative transition-transform hover:scale-105 active:scale-95"
+                        >
+                            <Character id={player2.characterId} size="lg" className="shadow-2xl scale-110" />
+                            <div className="absolute -top-4 -right-4 bg-emerald-500 text-white px-4 py-1 rounded-full font-black text-xs shadow-lg uppercase tracking-widest border-2 border-white">Teacher</div>
+                            <div className="absolute -bottom-2 bg-white text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black shadow-lg opacity-0 group-hover:opacity-100 transition-opacity uppercase">Click for next step! 👇</div>
+                        </button>
 
-                {/* The Problem (At the Peak for Mountain Mode) */}
-                <div className={`w-full max-w-2xl transition-all duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 && !feedback ? 'animate-shake' : ''}`}>
-                    {currentProblem && (
-                        <div className={`${(currentTurn === 'p2' && player2.type === 'computer') || isThinking ? 'opacity-40 scale-95 filter blur-[2px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
-                            {!feedback && (
-                                <div className="text-center mb-4 animate-in fade-in slide-in-from-top-4">
-                                    <span className={`inline-block px-8 py-2 rounded-full font-black text-lg uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black animate-pulse' : isMountainMode ? 'bg-sky-500 text-white' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
-                                        {isThinking ? 'Processing...' : (currentTurn === 'p1' ? player1.name + "'s Turn" : player2.name + "'s Turn")}
-                                    </span>
+                        <div className="bg-white/95 backdrop-blur-md p-6 rounded-[2rem] border-4 border-emerald-400 shadow-2xl relative after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-[16px] after:border-transparent after:border-b-white/95 w-full">
+                            <h3 className="font-black text-emerald-600 mb-3 text-lg flex items-center gap-2">
+                                <span>🍎</span> {feedback?.isCorrect ? 'Great Job!' : player2.name + "'s Lesson"}
+                            </h3>
+
+                            {feedback?.isCorrect || assessmentResult === 'right' ? (
+                                <div className="animate-in zoom-in duration-500 text-center py-4">
+                                    <p className="text-4xl mb-2">🎉✨🎊</p>
+                                    <p className="text-emerald-700 font-black text-2xl leading-tight">
+                                        THATS RIGHT! <br /> YOU NAILED IT! 🌟
+                                    </p>
+                                    {assessmentResult === 'right' && (
+                                        <button
+                                            onClick={advanceTurn}
+                                            className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black shadow-lg transition-all hover:scale-105"
+                                        >
+                                            NEXT LESSON! →
+                                        </button>
+                                    )}
+                                </div>
+                            ) : assessmentResult === 'wrong' ? (
+                                <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-4">
+                                    <div className="bg-red-50 border-2 border-red-200 p-4 rounded-2xl">
+                                        <p className="text-red-700 font-black text-sm mb-2 uppercase tracking-wide italic">Let&apos;s Reflect...</p>
+                                        <p className="text-slate-600 font-bold text-xs mb-3">Don&apos;t worry! Every mistake is a step toward mastering fractions. What answer did you get?</p>
+                                        <input
+                                            type="text"
+                                            value={userReflectedAnswer}
+                                            onChange={(e) => setUserReflectedAnswer(e.target.value)}
+                                            placeholder="Type your answer here..."
+                                            className="w-full bg-white border-2 border-red-100 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-red-300 transition-colors"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setAssessmentResult(null);
+                                            setUserReflectedAnswer('');
+                                            // Reset visible steps to 1 to try again
+                                            setVisibleStepCount(1);
+                                        }}
+                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg transition-all hover:translate-y-[-2px]"
+                                    >
+                                        🍎 REVIEW LESSONS
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <ul className="space-y-3">
+                                        {instructions.slice(0, visibleStepCount).map((step, i) => (
+                                            <li key={i} className="text-slate-700 font-bold text-sm leading-relaxed flex gap-2 animate-in slide-in-from-bottom-2">
+                                                <span className="text-emerald-500 shrink-0">•</span>
+                                                <span>{step}</span>
+                                            </li>
+                                        ))}
+
+                                        {visibleStepCount === instructions.length && currentProblem?.correctAnswer && (
+                                            <li className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-200 animate-in zoom-in duration-500">
+                                                <p className="text-emerald-500 font-black text-[10px] uppercase tracking-widest mb-1">Final Result:</p>
+                                                <p className="text-slate-800 font-black text-2xl">
+                                                    {(() => {
+                                                        const ans = currentProblem.correctAnswer;
+                                                        if (typeof ans === 'number') return ans;
+                                                        return `${ans.numerator}/${ans.denominator}`;
+                                                    })()}
+                                                </p>
+                                            </li>
+                                        )}
+
+                                        {visibleStepCount < instructions.length && (
+                                            <li className="text-emerald-400 font-black text-[10px] uppercase tracking-widest pt-2 flex items-center gap-2 animate-pulse">
+                                                <span>👇</span> CLICK TEACHER FOR NEXT STEP
+                                            </li>
+                                        )}
+                                    </ul>
+
+                                    {/* Assessment Buttons */}
+                                    {visibleStepCount === instructions.length && (
+                                        <div className="flex gap-3 pt-2">
+                                            <button
+                                                onClick={() => {
+                                                    setAssessmentResult('right');
+                                                    confetti({
+                                                        particleCount: 150,
+                                                        spread: 70,
+                                                        origin: { y: 0.6 },
+                                                        colors: ['#10b981', '#34d399', '#6ee7b7', '#fff']
+                                                    });
+                                                }}
+                                                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl font-black shadow-xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center gap-1"
+                                            >
+                                                <span className="text-xl">✅</span>
+                                                <span className="text-[10px] uppercase tracking-widest">I GOT IT!</span>
+                                            </button>
+                                            <button
+                                                onClick={() => setAssessmentResult('wrong')}
+                                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black shadow-xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center gap-1"
+                                            >
+                                                <span className="text-xl">❌</span>
+                                                <span className="text-[10px] uppercase tracking-widest">I WRONG</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
 
-                            {isThinking && (
-                                <div className="absolute inset-0 flex items-center justify-center z-20">
-                                    <div className="bg-white/20 p-16 rounded-full animate-ping h-40 w-40 border-4 border-white/30"></div>
-                                    <div className="absolute text-8xl transform animate-spin opacity-80">⚙️</div>
-                                </div>
+                <div className="flex-1 flex flex-col items-center gap-6">
+                    {/* Round Info Banner & Hard Round Button */}
+                    {!isPracticeMode && (
+                        <div className="flex flex-wrap justify-center gap-4 items-center">
+                            <div className={`bg-black/60 px-8 py-3 rounded-full backdrop-blur-md border-2 transition-all duration-300 ${isSpeedRound ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : isMountainMode ? 'border-sky-400 ring-4 ring-sky-400/20' : 'border-white/20 shadow-2xl'}`}>
+                                <span className={`font-black text-xs tracking-[0.3em] block mb-1 uppercase text-center ${isSpeedRound ? 'text-yellow-400' : isMountainMode ? 'text-sky-300' : 'text-slate-300'}`}>
+                                    {isSpeedRound ? '⚡ SPEED ROUND ⚡' : isMountainMode ? '🧗 MOUNTAIN CLIMB 🧗' : 'Normal Round'}
+                                </span>
+                                <p className="text-2xl font-black text-white leading-tight text-center">
+                                    Round {round}<span className="text-slate-400 text-lg">/{isMountainMode ? MAX_ROUNDS + 10 : isSpeedRound ? MAX_ROUNDS + 5 : MAX_ROUNDS}</span>
+                                </p>
+                            </div>
+
+                            {!isSpeedRound && !isMountainMode && gameState === 'PLAYING' && (
+                                <Button
+                                    onClick={skipToHardRound}
+                                    className="bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-black px-8 py-4 rounded-full border-b-4 border-rose-900 active:border-b-0 active:translate-y-1 shadow-xl hover:shadow-rose-500/40 transition-all flex items-center gap-2"
+                                >
+                                    🔥 HARD ROUND
+                                </Button>
                             )}
+                        </div>
+                    )}
 
-                            <Question
-                                f1={currentProblem.f1}
-                                f2={currentProblem.f2}
-                                operation={currentProblem.operation}
-                                onAnswer={checkAnswer}
-                                disabled={!!feedback || (currentTurn === 'p2' && player2.type === 'computer') || isThinking}
-                            />
+                    {isPracticeMode && (
+                        <div className="bg-emerald-600/60 px-10 py-3 rounded-full backdrop-blur-md border-2 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                            <p className="text-2xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                                <span>✨</span> LESSON PRACTICE <span>✨</span>
+                            </p>
+                        </div>
+                    )}
+
+                    {/* The Problem (At the Peak for Mountain Mode) */}
+                    <div className={`w-full max-w-2xl transition-all duration-500 ${(isSpeedRound || isMountainMode) && timeLeft < 5 && !feedback ? 'animate-shake' : ''}`}>
+                        {currentProblem && (
+                            <div className={`${(currentTurn === 'p2' && player2.type === 'computer' && !isPracticeMode) || isThinking ? 'opacity-40 scale-95 filter blur-[2px] pointer-events-none' : 'scale-100'} transition-all duration-500`}>
+                                {!feedback && !isPracticeMode && (
+                                    <div className="text-center mb-4 animate-in fade-in slide-in-from-top-4">
+                                        <span className={`inline-block px-8 py-2 rounded-full font-black text-lg uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] ${isSpeedRound ? 'bg-yellow-400 text-black animate-pulse' : isMountainMode ? 'bg-sky-500 text-white' : (currentTurn === 'p1' ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white')}`}>
+                                            {isThinking ? 'Processing...' : (currentTurn === 'p1' ? player1.name + "'s Turn" : player2.name + "'s Turn")}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {isPracticeMode && !feedback && (
+                                    <div className="text-center mb-4 animate-in fade-in slide-in-from-top-4">
+                                        <span className="inline-block px-8 py-2 rounded-full font-black text-lg uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(0,0,0,0.3)] bg-white text-emerald-600">
+                                            Your Turn to Master It! 🎓
+                                        </span>
+                                    </div>
+                                )}
+
+                                {isThinking && (
+                                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                                        <div className="bg-white/20 p-16 rounded-full animate-ping h-40 w-40 border-4 border-white/30"></div>
+                                        <div className="absolute text-8xl transform animate-spin opacity-80">⚙️</div>
+                                    </div>
+                                )}
+
+                                <Question
+                                    f1={currentProblem.f1}
+                                    f2={currentProblem.f2}
+                                    operation={currentProblem.operation}
+                                    onAnswer={checkAnswer}
+                                    disabled={!!feedback || (currentTurn === 'p2' && player2.type === 'computer' && !isPracticeMode) || isThinking}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Timer (Floating near the problem) */}
+                    {(isSpeedRound || isMountainMode) && !feedback && !isThinking && (
+                        <div className={`w-20 h-20 rounded-full border-8 bg-black/60 backdrop-blur-md flex items-center justify-center transition-all duration-300 ${timeLeft < 5 ? 'border-rose-500 text-rose-500 scale-125 animate-bounce' : 'border-white text-white'}`}>
+                            <span className="text-3xl font-black">{timeLeft}s</span>
                         </div>
                     )}
                 </div>
-
-                {/* Timer (Floating near the problem) */}
-                {(isSpeedRound || isMountainMode) && !feedback && !isThinking && (
-                    <div className={`w-20 h-20 rounded-full border-8 bg-black/60 backdrop-blur-md flex items-center justify-center transition-all duration-300 ${timeLeft < 5 ? 'border-rose-500 text-rose-500 scale-125 animate-bounce' : 'border-white text-white'}`}>
-                        <span className="text-3xl font-black">{timeLeft}s</span>
-                    </div>
-                )}
             </div>
 
             {/* Spacer to push climbers to the bottom */}
@@ -242,38 +439,40 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
 
                 {/* Player 1 Card (Climbing up from bottom) */}
                 <div
-                    className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'} ${isMountainMode ? 'bg-transparent shadow-none ring-0 border-none' : ''}`}
+                    className={`flex items-center gap-4 p-4 pr-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p1' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'} ${isMountainMode ? 'bg-transparent shadow-none ring-0 border-none' : ''} ${isPracticeMode ? 'mx-auto' : ''}`}
                     style={getClimbStyle(player1.elevation)}
                 >
                     <Character id={player1.characterId} size="md" className="shadow-2xl" isClimbing={isMountainMode && player1.elevation < 100} />
                     <div className={isMountainMode ? 'bg-black/60 p-4 rounded-3xl backdrop-blur-md border-2 border-white/20' : ''}>
                         <p className="font-bold text-sm text-blue-200 uppercase tracking-widest mb-1">{player1.name}</p>
-                        <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>
+                        {!isPracticeMode && <p className="text-4xl font-black text-white drop-shadow-md">{player1.score}</p>}
                         {isMountainMode && <p className="text-xs font-black text-sky-400 bg-sky-900/40 px-3 py-1 rounded-full inline-block mt-2 tracking-widest border border-sky-400/30">EL: {player1.elevation}m</p>}
                     </div>
                 </div>
 
-                {/* Player 2 Card (Climbing up from bottom) */}
-                <div
-                    className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'} ${isMountainMode ? 'bg-transparent shadow-none ring-0 border-none' : ''}`}
-                    style={getClimbStyle(player2.elevation)}
-                >
-                    <div className="relative">
-                        <Character id={player2.characterId} size="md" className={`shadow-2xl ${isThinking ? 'animate-pulse scale-110' : ''}`} isClimbing={isMountainMode && player2.elevation < 100} />
-                        {isThinking && (
-                            <div className="absolute -top-12 -left-8 animate-bounce z-20">
-                                <div className="bg-white text-indigo-600 font-black px-4 py-2 rounded-2xl shadow-xl relative after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white">
-                                    Thinking...
+                {/* Player 2 Card (Hidden in Practice Mode) */}
+                {!isPracticeMode && (
+                    <div
+                        className={`flex flex-row-reverse items-center gap-4 p-4 pl-8 rounded-2xl transition-all duration-500 ${currentTurn === 'p2' ? 'bg-white/20 backdrop-blur-md ring-4 ring-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105' : 'bg-black/30 backdrop-blur-sm grayscale opacity-80'} ${isMountainMode ? 'bg-transparent shadow-none ring-0 border-none' : ''}`}
+                        style={getClimbStyle(player2.elevation)}
+                    >
+                        <div className="relative">
+                            <Character id={player2.characterId} size="md" className={`shadow-2xl ${isThinking ? 'animate-pulse scale-110' : ''}`} isClimbing={isMountainMode && player2.elevation < 100} />
+                            {isThinking && (
+                                <div className="absolute -top-12 -left-8 animate-bounce z-20">
+                                    <div className="bg-white text-indigo-600 font-black px-4 py-2 rounded-2xl shadow-xl relative after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white">
+                                        Thinking...
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
+                        <div className={`text-right ${isMountainMode ? 'bg-black/60 p-4 rounded-3xl backdrop-blur-md border-2 border-white/20' : ''}`}>
+                            <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
+                            <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
+                            {isMountainMode && <p className="text-xs font-black text-sky-400 bg-sky-900/40 px-3 py-1 rounded-full inline-block mt-2 tracking-widest border border-sky-400/30">EL: {player2.elevation}m</p>}
+                        </div>
                     </div>
-                    <div className={`text-right ${isMountainMode ? 'bg-black/60 p-4 rounded-3xl backdrop-blur-md border-2 border-white/20' : ''}`}>
-                        <p className="font-bold text-sm text-rose-200 uppercase tracking-widest mb-1">{player2.name}</p>
-                        <p className="text-4xl font-black text-white drop-shadow-md">{player2.score}</p>
-                        {isMountainMode && <p className="text-xs font-black text-sky-400 bg-sky-900/40 px-3 py-1 rounded-full inline-block mt-2 tracking-widest border border-sky-400/30">EL: {player2.elevation}m</p>}
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Feedback Overlay (Same as before but z-index to 100) */}
@@ -404,6 +603,39 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
           .animate-shake {
             animation: shake 0.1s ease-in-out infinite;
           }
+            {/* Reward Mini-Game Offer Modal */}
+            {showMiniGameOffer && (
+                <div className="absolute inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-indigo-900/60 animate-in fade-in duration-300">
+                    <Card className="max-w-md w-full p-8 text-center border-8 border-yellow-400 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] animate-in zoom-in duration-500">
+                        <div className="mb-6">
+                            <span className="text-7xl">🎁</span>
+                        </div>
+                        <h2 className="text-4xl font-black text-indigo-600 mb-2 tracking-tighter">REWARD TIME!</h2>
+                        <p className="text-slate-500 font-bold mb-8 leading-relaxed">
+                            You got 2 in a row! Want to take a 15-second break and earn **BONUS POINTS** in a mini-game?
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button 
+                                size="lg" 
+                                className="py-6 text-xl bg-emerald-500 hover:bg-emerald-600 border-b-8 border-emerald-800"
+                                onClick={startMiniGame}
+                            >
+                                🍕 PLAY!
+                            </Button>
+                            <Button 
+                                size="lg" 
+                                variant="secondary"
+                                className="py-6 text-xl border-b-8"
+                                onClick={skipMiniGame}
+                            >
+                                SKIP
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
        `}</style>
         </div>
     );

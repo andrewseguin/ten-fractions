@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { MAX_ROUNDS, POINTS_PER_DIFFICULTY, PlayerType } from '@/lib/constants';
 import { generateProblem, compareFractions, Fraction, addFractions, subtractFractions, multiplyFractions, divideFractions } from '@/lib/fractions';
 import { generateAIAnswer, shouldAIError } from '@/lib/ai';
-import { getStepByStep } from '@/lib/steps';
+import { getStepByStep, getInstructions } from '@/lib/steps';
 
-export type GameState = 'MENU' | 'PLAYING' | 'GAME_OVER';
+export type GameState = 'MENU' | 'PLAYING' | 'GAME_OVER' | 'MINI_GAME';
 
 export type Player = {
     id: string;
@@ -39,13 +39,36 @@ export const useGameLogic = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     const [isMountainMode, setIsMountainMode] = useState(false);
+    const [practiceOperation, setPracticeOperation] = useState<string | null>(null);
+    const [isPracticeMode, setIsPracticeMode] = useState(false);
+    const [visibleStepCount, setVisibleStepCount] = useState(1);
+    const [assessmentResult, setAssessmentResult] = useState<'right' | 'wrong' | null>(null);
+    const [userReflectedAnswer, setUserReflectedAnswer] = useState('');
+
+    // Reward Mini-game state
+    const [p1CorrectSessionCount, setP1CorrectSessionCount] = useState(0);
+    const [showMiniGameOffer, setShowMiniGameOffer] = useState(false);
+    const [miniGamePoints, setMiniGamePoints] = useState(0);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctVal: any; steps?: string[]; isTimeout?: boolean } | null>(null);
 
-    const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number, bgId?: string) => {
+    const instructions = currentProblem && isPracticeMode
+        ? getInstructions(currentProblem.f1, currentProblem.f2, currentProblem.operation)
+        : [];
+
+    const showNextStep = useCallback(() => {
+        setVisibleStepCount(prev => Math.min(prev + 1, instructions.length));
+    }, [instructions.length]);
+
+    const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number, bgId?: string, specOp?: string) => {
         const mountainMode = bgId === 'mountain';
         setIsMountainMode(mountainMode);
+        setPracticeOperation(specOp || null);
+        setIsPracticeMode(!!specOp);
+        setVisibleStepCount(1);
+        setAssessmentResult(null);
+        setUserReflectedAnswer('');
 
         setPlayer1({ id: 'p1', name: p1Name, characterId: p1Char, score: 0, elevation: 0, type: 'human' });
         setPlayer2({ id: 'p2', name: p2Name, type: p2Type, characterId: p2Char, score: 0, elevation: 0 });
@@ -57,16 +80,22 @@ export const useGameLogic = () => {
         setIsSpeedRound(false);
         setTimeLeft(20);
 
-        const prob = generateProblem(mountainMode ? 1 : diff);
+        const prob = generateProblem(mountainMode ? 1 : diff, specOp);
         setCurrentProblem(prob);
         setFeedback(null);
         setIsThinking(false);
+        setP1CorrectSessionCount(0);
+        setShowMiniGameOffer(false);
+        setMiniGamePoints(0);
     };
 
     const advanceTurn = useCallback(() => {
         setFeedback(null);
+        setVisibleStepCount(1);
+        setAssessmentResult(null);
+        setUserReflectedAnswer('');
 
-        const nextTurn = currentTurn === 'p1' ? 'p2' : 'p1';
+        const nextTurn = isPracticeMode ? 'p1' : (currentTurn === 'p1' ? 'p2' : 'p1');
 
         if (currentTurn === 'p2' && round >= MAX_ROUNDS && !isMountainMode) {
             if (!isSpeedRound) {
@@ -74,7 +103,7 @@ export const useGameLogic = () => {
                 setRound(11);
                 setCurrentTurn('p1');
                 setTimeLeft(20);
-                const nextProb = generateProblem(difficulty);
+                const nextProb = generateProblem(difficulty, practiceOperation || undefined);
                 setCurrentProblem(nextProb);
                 setIsThinking(false);
             } else if (round >= MAX_ROUNDS + 5) {
@@ -84,7 +113,7 @@ export const useGameLogic = () => {
                 setRound(prev => prev + 1);
                 setCurrentTurn('p1');
                 setTimeLeft(20);
-                const nextProb = generateProblem(difficulty);
+                const nextProb = generateProblem(difficulty, practiceOperation || undefined);
                 setCurrentProblem(nextProb);
             }
         } else if (isMountainMode && round >= MAX_ROUNDS + 10) { // Mountain mode lasts 20 rounds
@@ -103,10 +132,10 @@ export const useGameLogic = () => {
                 setIsThinking(false);
             }
 
-            const nextProb = generateProblem(difficulty);
+            const nextProb = generateProblem(difficulty, practiceOperation || undefined);
             setCurrentProblem(nextProb);
         }
-    }, [currentTurn, round, difficulty, player2.type, isSpeedRound, isMountainMode]);
+    }, [currentTurn, round, difficulty, player2.type, isSpeedRound, isMountainMode, practiceOperation, isPracticeMode]);
 
     const handleTimeout = useCallback(() => {
         if (!currentProblem || feedback || (!isSpeedRound && !isMountainMode)) return;
@@ -194,9 +223,19 @@ export const useGameLogic = () => {
 
         const isComputer = currentTurn === 'p2' && player2.type === 'computer';
 
-        if (isCorrect || isComputer || feedback?.isTimeout) {
+        if (isCorrect || isComputer) {
+            if (isCorrect && currentTurn === 'p1' && !isPracticeMode) {
+                const nextCount = p1CorrectSessionCount + 1;
+                setP1CorrectSessionCount(nextCount);
+                if (nextCount >= 2) {
+                    setShowMiniGameOffer(true);
+                }
+            }
+
             setTimeout(() => {
-                advanceTurn();
+                if (p1CorrectSessionCount + 1 < 2 || currentTurn !== 'p1' || isPracticeMode) {
+                    advanceTurn();
+                }
             }, 2000);
         }
 
@@ -252,10 +291,49 @@ export const useGameLogic = () => {
         isThinking,
         isSpeedRound,
         isMountainMode,
+        isPracticeMode,
+        instructions,
+        visibleStepCount,
+        setVisibleStepCount,
+        showNextStep,
+        assessmentResult,
+        setAssessmentResult,
+        userReflectedAnswer,
+        setUserReflectedAnswer,
+        showMiniGameOffer,
+        setShowMiniGameOffer,
+        startMiniGame: () => {
+            setShowMiniGameOffer(false);
+            setGameState('MINI_GAME');
+        },
+        resolveMiniGame: (points: number) => {
+            setPlayer1(prev => ({ ...prev, score: prev.score + points }));
+            setMiniGamePoints(points);
+            setP1CorrectSessionCount(0);
+            setGameState('PLAYING');
+            advanceTurn();
+        },
+        skipMiniGame: () => {
+            setShowMiniGameOffer(false);
+            setP1CorrectSessionCount(0);
+            advanceTurn();
+        },
+        miniGamePoints,
         timeLeft,
         startGame,
         checkAnswer,
         advanceTurn,
+        skipToHardRound: () => {
+            setDifficulty(3);
+            setIsSpeedRound(true);
+            setRound(MAX_ROUNDS + 1);
+            setCurrentTurn('p1');
+            setTimeLeft(20);
+            const nextProb = generateProblem(3);
+            setCurrentProblem(nextProb);
+            setFeedback(null);
+            setIsThinking(false);
+        },
         resetGame: () => setGameState('MENU')
     };
 };

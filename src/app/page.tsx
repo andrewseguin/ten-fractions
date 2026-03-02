@@ -32,10 +32,37 @@ export default function Home() {
     );
   };
 
+  const handleHardStart = (settings: Omit<GameSettings, 'difficulty'>) => {
+    setSelectedBg(settings.bgId);
+    game.startGame(
+      settings.p1Name,
+      settings.p1Char,
+      settings.p2Type,
+      settings.p2Name,
+      settings.p2Char,
+      3
+    );
+    game.skipToHardRound();
+  };
+
+  const handlePracticeStart = (settings: { p1Name: string; p1Char: string; p2Name: string; p2Char: string; difficulty: number; topic: string }) => {
+    setSelectedBg('forest');
+    game.startGame(
+      settings.p1Name,
+      settings.p1Char,
+      'computer',
+      settings.p2Name,
+      settings.p2Char,
+      settings.difficulty,
+      'forest',
+      settings.topic
+    );
+  };
+
   return (
     <main>
       {game.gameState === 'MENU' ? (
-        <MainMenu onStart={handleStart} />
+        <MainMenu onStart={handleStart} onHardStart={handleHardStart} onPracticeStart={handlePracticeStart} />
       ) : (
         <GameArena game={game} bgId={selectedBg} />
       )}

@@ -93,3 +93,13 @@ export const getStepByStep = (f1: Fraction, f2: Fraction, operation: string): st
 
     return steps;
 };
+
+export const getInstructions = (f1: Fraction, f2: Fraction, operation: string): string[] => {
+    const allSteps = getStepByStep(f1, f2, operation);
+    // Filter out steps that contain the final answer
+    return allSteps.filter(step =>
+        !step.toLowerCase().includes('result is') &&
+        !step.toLowerCase().includes('answer is') &&
+        !step.toLowerCase().includes('final answer')
+    );
+};

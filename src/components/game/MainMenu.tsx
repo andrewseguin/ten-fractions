@@ -115,10 +115,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPrac
                                         <button
                                             key={c.id}
                                             onClick={() => setP1Char(c.id)}
-                                            className={`group relative p-3 rounded-[2rem] border-4 transition-all duration-300 hover:scale-105 ${p1Char === c.id ? 'bg-blue-100 border-blue-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
+                                            className={`group relative p-3 rounded-3xl border-4 transition-all duration-300 hover:scale-105 ${p1Char === c.id ? 'bg-blue-100 border-blue-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
                                         >
                                             <Character id={c.id} fullBody size="sm" className="w-full h-16 mb-2" />
-                                            <span className={`text-[10px] font-black uppercase text-center block leading-tight ${p1Char === c.id ? 'text-blue-700' : 'text-slate-500'}`}>{c.name}</span>
+                                            <div className="w-full px-0.5">
+                                                <span className={`text-[10px] font-black uppercase text-center block leading-tight break-words ${p1Char === c.id ? 'text-blue-700' : 'text-slate-500'}`}>{c.name}</span>
+                                            </div>
                                             {p1Char === c.id && (
                                                 <div className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in duration-300">
                                                     <span className="text-[10px]">⭐</span>
@@ -139,10 +141,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPrac
                                         <button
                                             key={c.id}
                                             onClick={() => setP2Char(c.id)}
-                                            className={`group relative p-3 rounded-[2rem] border-4 transition-all duration-300 hover:scale-105 ${p2Char === c.id ? 'bg-emerald-100 border-emerald-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
+                                            className={`group relative p-3 rounded-3xl border-4 transition-all duration-300 hover:scale-105 ${p2Char === c.id ? 'bg-emerald-100 border-emerald-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
                                         >
                                             <Character id={c.id} fullBody size="sm" className="w-full h-16 mb-2" />
-                                            <span className={`text-[10px] font-black uppercase text-center block leading-tight ${p2Char === c.id ? 'text-emerald-700' : 'text-slate-500'}`}>{c.name}</span>
+                                            <div className="w-full px-0.5">
+                                                <span className={`text-[10px] font-black uppercase text-center block leading-tight break-words ${p2Char === c.id ? 'text-emerald-700' : 'text-slate-500'}`}>{c.name}</span>
+                                            </div>
                                             {p2Char === c.id && (
                                                 <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in duration-300">
                                                     <span className="text-[10px]">⭐</span>

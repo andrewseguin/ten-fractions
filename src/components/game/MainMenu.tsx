@@ -110,20 +110,23 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPrac
                                 <h2 className="text-2xl font-black text-blue-600 mb-6 flex items-center gap-3 text-sm">
                                     <span className="bg-white p-2 rounded-xl shadow-sm text-lg">🦸</span> CHOOSE STUDENT
                                 </h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-200">
+                                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-200">
                                     {CHARACTERS.map(c => (
                                         <button
                                             key={c.id}
                                             onClick={() => setP1Char(c.id)}
-                                            className={`group relative p-3 rounded-3xl border-4 transition-all duration-300 hover:scale-105 ${p1Char === c.id ? 'bg-blue-100 border-blue-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
+                                            className={`group relative p-3 rounded-2xl border-4 transition-all duration-300 hover:scale-102 flex items-center gap-4 ${p1Char === c.id ? 'bg-blue-100 border-blue-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
                                         >
-                                            <Character id={c.id} fullBody size="sm" className="w-full h-16 mb-2" />
-                                            <div className="w-full px-0.5">
-                                                <span className={`text-[10px] font-black uppercase text-center block leading-tight break-words ${p1Char === c.id ? 'text-blue-700' : 'text-slate-500'}`}>{c.name}</span>
+                                            <div className="w-16 h-16 flex-shrink-0 bg-white rounded-xl p-1 shadow-sm border border-blue-50">
+                                                <Character id={c.id} fullBody size="sm" className="w-full h-full" />
+                                            </div>
+                                            <div className="flex-grow text-left">
+                                                <span className={`text-sm font-black uppercase leading-tight ${p1Char === c.id ? 'text-blue-700' : 'text-slate-600'}`}>{c.name}</span>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Student</p>
                                             </div>
                                             {p1Char === c.id && (
-                                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in duration-300">
-                                                    <span className="text-[10px]">⭐</span>
+                                                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in duration-300 mr-2">
+                                                    <span className="text-sm">⭐</span>
                                                 </div>
                                             )}
                                         </button>
@@ -136,20 +139,23 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPrac
                                 <h2 className="text-2xl font-black text-emerald-600 mb-6 flex items-center gap-3 text-sm">
                                     <span className="bg-white p-2 rounded-xl shadow-sm text-lg">🍎</span> CHOOSE TEACHER
                                 </h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-200">
+                                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-200">
                                     {CHARACTERS.map(c => (
                                         <button
                                             key={c.id}
                                             onClick={() => setP2Char(c.id)}
-                                            className={`group relative p-3 rounded-3xl border-4 transition-all duration-300 hover:scale-105 ${p2Char === c.id ? 'bg-emerald-100 border-emerald-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
+                                            className={`group relative p-3 rounded-2xl border-4 transition-all duration-300 hover:scale-102 flex items-center gap-4 ${p2Char === c.id ? 'bg-emerald-100 border-emerald-500 shadow-lg' : 'bg-white/50 border-transparent opacity-60 hover:opacity-100'}`}
                                         >
-                                            <Character id={c.id} fullBody size="sm" className="w-full h-16 mb-2" />
-                                            <div className="w-full px-0.5">
-                                                <span className={`text-[10px] font-black uppercase text-center block leading-tight break-words ${p2Char === c.id ? 'text-emerald-700' : 'text-slate-500'}`}>{c.name}</span>
+                                            <div className="w-16 h-16 flex-shrink-0 bg-white rounded-xl p-1 shadow-sm border border-emerald-50">
+                                                <Character id={c.id} fullBody size="sm" className="w-full h-full" />
+                                            </div>
+                                            <div className="flex-grow text-left">
+                                                <span className={`text-sm font-black uppercase leading-tight ${p2Char === c.id ? 'text-emerald-700' : 'text-slate-600'}`}>{c.name}</span>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Teacher</p>
                                             </div>
                                             {p2Char === c.id && (
-                                                <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in duration-300">
-                                                    <span className="text-[10px]">⭐</span>
+                                                <div className="bg-emerald-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in duration-300 mr-2">
+                                                    <span className="text-sm">⭐</span>
                                                 </div>
                                             )}
                                         </button>

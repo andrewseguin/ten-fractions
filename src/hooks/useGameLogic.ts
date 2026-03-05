@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { MAX_ROUNDS, POINTS_PER_DIFFICULTY, PlayerType } from '@/lib/constants';
 import { generateProblem, compareFractions, Fraction, addFractions, subtractFractions, multiplyFractions, divideFractions } from '@/lib/fractions';
 import { generateAIAnswer, shouldAIError } from '@/lib/ai';
-import { getStepByStep, getInstructions } from '@/lib/steps';
+import { getStepByStep, getInstructions, getAlternativeExplanation } from '@/lib/steps';
 
 export type GameState = 'MENU' | 'PLAYING' | 'GAME_OVER' | 'MINI_GAME';
 
@@ -41,34 +41,57 @@ export const useGameLogic = () => {
     const [isMountainMode, setIsMountainMode] = useState(false);
     const [practiceOperation, setPracticeOperation] = useState<string | null>(null);
     const [isPracticeMode, setIsPracticeMode] = useState(false);
-    const [visibleStepCount, setVisibleStepCount] = useState(1);
+    const [visibleStepCount, setVisibleStepCount] = useState(0);
     const [assessmentResult, setAssessmentResult] = useState<'right' | 'wrong' | null>(null);
     const [userReflectedAnswer, setUserReflectedAnswer] = useState('');
+    const [isAlternativeMode, setIsAlternativeMode] = useState(false);
+    const [isHintThinking, setIsHintThinking] = useState(false);
+    const [hintTimeLeft, setHintTimeLeft] = useState(0);
 
     // Reward Mini-game state
     const [p1CorrectSessionCount, setP1CorrectSessionCount] = useState(0);
     const [showMiniGameOffer, setShowMiniGameOffer] = useState(false);
     const [miniGamePoints, setMiniGamePoints] = useState(0);
+    const [isDirectMiniGame, setIsDirectMiniGame] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctVal: any; steps?: string[]; isTimeout?: boolean } | null>(null);
 
     const instructions = currentProblem && isPracticeMode
-        ? getInstructions(currentProblem.f1, currentProblem.f2, currentProblem.operation)
+        ? (isAlternativeMode
+            ? getAlternativeExplanation(currentProblem.f1, currentProblem.f2, currentProblem.operation)
+            : getInstructions(currentProblem.f1, currentProblem.f2, currentProblem.operation))
         : [];
 
     const showNextStep = useCallback(() => {
-        setVisibleStepCount(prev => Math.min(prev + 1, instructions.length));
-    }, [instructions.length]);
+        if (isHintThinking || visibleStepCount >= instructions.length) return;
 
+        setIsHintThinking(true);
+        setHintTimeLeft(5);
+
+        const timer = setInterval(() => {
+            setHintTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setVisibleStepCount(v => Math.min(v + 1, instructions.length));
+                    setIsHintThinking(false);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    }, [instructions.length, isHintThinking, visibleStepCount]);
     const startGame = (p1Name: string, p1Char: string, p2Type: PlayerType, p2Name: string, p2Char: string, diff: number, bgId?: string, specOp?: string) => {
         const mountainMode = bgId === 'mountain';
         setIsMountainMode(mountainMode);
         setPracticeOperation(specOp || null);
         setIsPracticeMode(!!specOp);
-        setVisibleStepCount(1);
+        setVisibleStepCount(0);
         setAssessmentResult(null);
         setUserReflectedAnswer('');
+        setIsAlternativeMode(false);
+        setIsHintThinking(false);
+        setHintTimeLeft(0);
 
         setPlayer1({ id: 'p1', name: p1Name, characterId: p1Char, score: 0, elevation: 0, type: 'human' });
         setPlayer2({ id: 'p2', name: p2Name, type: p2Type, characterId: p2Char, score: 0, elevation: 0 });
@@ -87,13 +110,15 @@ export const useGameLogic = () => {
         setP1CorrectSessionCount(0);
         setShowMiniGameOffer(false);
         setMiniGamePoints(0);
+        setIsDirectMiniGame(false);
     };
 
     const advanceTurn = useCallback(() => {
         setFeedback(null);
-        setVisibleStepCount(1);
+        setVisibleStepCount(0);
         setAssessmentResult(null);
         setUserReflectedAnswer('');
+        setIsAlternativeMode(false);
 
         const nextTurn = isPracticeMode ? 'p1' : (currentTurn === 'p1' ? 'p2' : 'p1');
 
@@ -232,11 +257,13 @@ export const useGameLogic = () => {
                 }
             }
 
-            setTimeout(() => {
-                if (p1CorrectSessionCount + 1 < 2 || currentTurn !== 'p1' || isPracticeMode) {
-                    advanceTurn();
-                }
-            }, 2000);
+            if (!isPracticeMode) {
+                setTimeout(() => {
+                    if (p1CorrectSessionCount + 1 < 2 || currentTurn !== 'p1') {
+                        advanceTurn();
+                    }
+                }, 3000);
+            }
         }
 
         return { isCorrect, correctVal };
@@ -265,8 +292,8 @@ export const useGameLogic = () => {
     useEffect(() => {
         if (gameState === 'PLAYING' && currentTurn === 'p2' && player2.type === 'computer' && currentProblem && !feedback && isThinking) {
             const thinkingTime = (isSpeedRound || isMountainMode)
-                ? 1500 + Math.random() * 1000
-                : 2000 + Math.random() * 2000;
+                ? 1000 + Math.random() * 500
+                : 1200 + Math.random() * 1000;
 
             const timer = setTimeout(() => {
                 const shouldErr = shouldAIError(difficulty);
@@ -300,18 +327,27 @@ export const useGameLogic = () => {
         setAssessmentResult,
         userReflectedAnswer,
         setUserReflectedAnswer,
+        isAlternativeMode,
+        setIsAlternativeMode,
+        isHintThinking,
+        hintTimeLeft,
         showMiniGameOffer,
         setShowMiniGameOffer,
         startMiniGame: () => {
             setShowMiniGameOffer(false);
+            setIsDirectMiniGame(false);
             setGameState('MINI_GAME');
         },
         resolveMiniGame: (points: number) => {
             setPlayer1(prev => ({ ...prev, score: prev.score + points }));
             setMiniGamePoints(points);
             setP1CorrectSessionCount(0);
-            setGameState('PLAYING');
-            advanceTurn();
+            if (isDirectMiniGame) {
+                setGameState('MENU');
+            } else {
+                setGameState('PLAYING');
+                advanceTurn();
+            }
         },
         skipMiniGame: () => {
             setShowMiniGameOffer(false);
@@ -333,6 +369,11 @@ export const useGameLogic = () => {
             setCurrentProblem(nextProb);
             setFeedback(null);
             setIsThinking(false);
+        },
+        startMiniGameDirectly: (p1Char: string) => {
+            setPlayer1(prev => ({ ...prev, characterId: p1Char }));
+            setIsDirectMiniGame(true);
+            setGameState('MINI_GAME');
         },
         resetGame: () => setGameState('MENU')
     };

@@ -105,8 +105,8 @@ export const generateProblem = (difficulty: number, specificOperation?: string) 
     const f1 = generateFraction(d1);
     const f2 = generateFraction(d2);
 
-    // Avoid negative result for level 1 subtraction
-    if (operation === '-' && difficulty === 1) {
+    // Avoid negative result for subtraction
+    if (operation === '-') {
         if (compareFractions(f1, f2) < 0) {
             return { f1: f2, f2: f1, operation }; // Swap
         }

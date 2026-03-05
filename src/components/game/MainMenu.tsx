@@ -33,9 +33,10 @@ interface MainMenuProps {
         difficulty: number;
         topic: string;
     }) => void;
+    onMiniGameStart: (characterId: string) => void;
 }
 
-export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPracticeStart }) => {
+export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPracticeStart, onMiniGameStart }) => {
     const [view, setView] = useState<'AGE_SELECT' | 'MODE_SELECT' | 'SETTINGS' | 'PRACTICE_SELECT'>('AGE_SELECT');
 
     const [p1Name, setP1Name] = useState('Hero');
@@ -318,6 +319,36 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStart, onHardStart, onPrac
                                 <div className="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-black text-xl shadow-2xl group-hover:bg-emerald-50 transition-colors">ENTER CLASSROOM 👉</div>
                             </div>
                             <div className="absolute top-6 right-12 text-6xl animate-float opacity-40">🍃</div>
+                        </button>
+
+                        {/* Amazing Mini-Game Card */}
+                        <button
+                            onClick={() => onMiniGameStart(p1Char)}
+                            className="group md:col-span-2 relative h-[350px] rounded-[3rem] overflow-hidden border-8 border-white/40 hover:border-yellow-400 transition-all shadow-2xl hover:scale-[1.01] active:scale-95 bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500"
+                        >
+                            <div className="absolute inset-0 opacity-40 mix-blend-overlay animate-pulse">
+                                <div className="absolute top-10 left-10 text-6xl">✨</div>
+                                <div className="absolute bottom-10 right-10 text-6xl">🌈</div>
+                                <div className="absolute top-1/2 left-1/4 text-4xl">⭐</div>
+                                <div className="absolute top-1/3 right-1/4 text-5xl">🎈</div>
+                            </div>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+                                <span className="bg-yellow-400 text-black px-8 py-3 rounded-full font-black text-lg uppercase tracking-[0.2em] mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.3)] animate-bounce">
+                                    THE AMAZING GAME! 🌟
+                                </span>
+                                <h2 className="text-6xl font-black text-white mb-4 drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+                                    FRACTION FEAST! 🍎
+                                </h2>
+                                <p className="text-white font-black text-2xl mb-8 max-w-xl drop-shadow-md">
+                                    Catch as many treats as you can in this colorful, fun, and fast race! 🌈🚀
+                                </p>
+                                <div className="bg-white text-indigo-900 px-12 py-5 rounded-[2rem] font-black text-3xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] group-hover:bg-yellow-50 group-hover:text-yellow-600 transition-all group-hover:scale-110 active:scale-95">
+                                    PLAY NOW! 🎮
+                                </div>
+                            </div>
+                            <div className="absolute bottom-6 left-12 flex gap-4">
+                                <Character id={p1Char} fullBody size="md" className="drop-shadow-2xl animate-bounce" />
+                            </div>
                         </button>
                     </div>
                 </div>

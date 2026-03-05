@@ -51,9 +51,10 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
         startMiniGame,
         resolveMiniGame,
         skipMiniGame,
-        miniGamePoints
+        miniGamePoints,
+        isHintThinking,
+        hintTimeLeft
     } = game;
-
     const bg = BG_CONSTANTS.find(b => b.id === bgId) || BG_CONSTANTS[0];
 
     if (gameState === 'GAME_OVER') {
@@ -223,11 +224,18 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                     <div className="w-full lg:w-1/3 flex flex-col items-center gap-4 animate-in slide-in-from-left-8 duration-700">
                         <button
                             onClick={showNextStep}
-                            className="group relative transition-transform hover:scale-105 active:scale-95"
+                            disabled={isHintThinking}
+                            className={`group relative transition-transform hover:scale-105 active:scale-95 ${isHintThinking ? 'cursor-wait opacity-80' : ''}`}
                         >
-                            <Character id={player2.characterId} size="lg" className="shadow-2xl scale-110" />
+                            <Character id={player2.characterId} size="lg" className={`shadow-2xl scale-110 ${isHintThinking ? 'animate-pulse' : ''}`} />
                             <div className="absolute -top-4 -right-4 bg-emerald-500 text-white px-4 py-1 rounded-full font-black text-xs shadow-lg uppercase tracking-widest border-2 border-white">Teacher</div>
-                            <div className="absolute -bottom-2 bg-white text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black shadow-lg opacity-0 group-hover:opacity-100 transition-opacity uppercase">Click for next step! 👇</div>
+                            {isHintThinking ? (
+                                <div className="absolute -right-48 top-1/2 -translate-y-1/2 bg-white text-emerald-600 px-6 py-3 rounded-2xl text-lg font-black shadow-2xl border-4 border-emerald-100 animate-bounce whitespace-nowrap z-50">
+                                    Hmmm... {hintTimeLeft}s 🧠
+                                </div>
+                            ) : (
+                                <div className="absolute -bottom-2 bg-white text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black shadow-lg opacity-0 group-hover:opacity-100 transition-opacity uppercase">Click for next step! 👇</div>
+                            )}
                         </button>
 
                         <div className="bg-white/95 backdrop-blur-md p-6 rounded-[2rem] border-4 border-emerald-400 shadow-2xl relative after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-[16px] after:border-transparent after:border-b-white/95 w-full">
@@ -241,38 +249,11 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                                     <p className="text-emerald-700 font-black text-2xl leading-tight">
                                         THATS RIGHT! <br /> YOU NAILED IT! 🌟
                                     </p>
-                                    {assessmentResult === 'right' && (
-                                        <button
-                                            onClick={advanceTurn}
-                                            className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black shadow-lg transition-all hover:scale-105"
-                                        >
-                                            NEXT LESSON! →
-                                        </button>
-                                    )}
-                                </div>
-                            ) : assessmentResult === 'wrong' ? (
-                                <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-4">
-                                    <div className="bg-red-50 border-2 border-red-200 p-4 rounded-2xl">
-                                        <p className="text-red-700 font-black text-sm mb-2 uppercase tracking-wide italic">Let&apos;s Reflect...</p>
-                                        <p className="text-slate-600 font-bold text-xs mb-3">Don&apos;t worry! Every mistake is a step toward mastering fractions. What answer did you get?</p>
-                                        <input
-                                            type="text"
-                                            value={userReflectedAnswer}
-                                            onChange={(e) => setUserReflectedAnswer(e.target.value)}
-                                            placeholder="Type your answer here..."
-                                            className="w-full bg-white border-2 border-red-100 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-red-300 transition-colors"
-                                        />
-                                    </div>
                                     <button
-                                        onClick={() => {
-                                            setAssessmentResult(null);
-                                            setUserReflectedAnswer('');
-                                            // Reset visible steps to 1 to try again
-                                            setVisibleStepCount(1);
-                                        }}
-                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg transition-all hover:translate-y-[-2px]"
+                                        onClick={advanceTurn}
+                                        className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black shadow-lg transition-all hover:scale-105"
                                     >
-                                        🍎 REVIEW LESSONS
+                                        NEXT LESSON! →
                                     </button>
                                 </div>
                             ) : (
@@ -285,15 +266,10 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                                             </li>
                                         ))}
 
-                                        {visibleStepCount === instructions.length && currentProblem?.correctAnswer && (
-                                            <li className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-200 animate-in zoom-in duration-500">
-                                                <p className="text-emerald-500 font-black text-[10px] uppercase tracking-widest mb-1">Final Result:</p>
-                                                <p className="text-slate-800 font-black text-2xl">
-                                                    {(() => {
-                                                        const ans = currentProblem.correctAnswer;
-                                                        if (typeof ans === 'number') return ans;
-                                                        return `${ans.numerator}/${ans.denominator}`;
-                                                    })()}
+                                        {visibleStepCount === instructions.length && (
+                                            <li className="bg-emerald-50 text-emerald-700 p-4 rounded-3xl animate-in zoom-in duration-500 border-2 border-dashed border-emerald-300">
+                                                <p className="font-black text-sm uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                                                    <span>🎯</span> Solve it in the middle! <span>👇</span>
                                                 </p>
                                             </li>
                                         )}
@@ -304,34 +280,6 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                                             </li>
                                         )}
                                     </ul>
-
-                                    {/* Assessment Buttons */}
-                                    {visibleStepCount === instructions.length && (
-                                        <div className="flex gap-3 pt-2">
-                                            <button
-                                                onClick={() => {
-                                                    setAssessmentResult('right');
-                                                    confetti({
-                                                        particleCount: 150,
-                                                        spread: 70,
-                                                        origin: { y: 0.6 },
-                                                        colors: ['#10b981', '#34d399', '#6ee7b7', '#fff']
-                                                    });
-                                                }}
-                                                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl font-black shadow-xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center gap-1"
-                                            >
-                                                <span className="text-xl">✅</span>
-                                                <span className="text-[10px] uppercase tracking-widest">I GOT IT!</span>
-                                            </button>
-                                            <button
-                                                onClick={() => setAssessmentResult('wrong')}
-                                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black shadow-xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center gap-1"
-                                            >
-                                                <span className="text-xl">❌</span>
-                                                <span className="text-[10px] uppercase tracking-widest">I WRONG</span>
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -401,6 +349,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                                     f1={currentProblem.f1}
                                     f2={currentProblem.f2}
                                     operation={currentProblem.operation}
+                                    hideEquation={false}
                                     onAnswer={checkAnswer}
                                     disabled={!!feedback || (currentTurn === 'p2' && player2.type === 'computer' && !isPracticeMode) || isThinking}
                                 />
@@ -519,13 +468,11 @@ export const GameArena: React.FC<GameArenaProps> = ({ game, bgId = 'concert' }) 
                             </div>
                         )}
 
-                        {!feedback.isCorrect && (
-                            <div className="mt-8">
-                                <Button onClick={advanceTurn} size="lg" className="bg-white text-rose-600 hover:bg-rose-50 text-2xl w-full shadow-2xl py-6 rounded-3xl">
-                                    GOT IT, NEXT! 👉
-                                </Button>
-                            </div>
-                        )}
+                        <div className="mt-8">
+                            <Button onClick={advanceTurn} size="lg" className={`text-2xl w-full shadow-2xl py-6 rounded-3xl ${feedback.isCorrect ? 'bg-emerald-600 text-white hover:bg-emerald-500 border-b-8 shadow-2xl border-emerald-900 active:border-b-0 active:translate-y-2' : 'bg-rose-600 text-white hover:bg-rose-500 border-b-8 shadow-2xl border-rose-900 active:border-b-0 active:translate-y-2'}`}>
+                                {feedback.isCorrect ? 'AWESOME, NEXT! 🚀' : 'GOT IT, NEXT! 👉'}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

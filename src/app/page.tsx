@@ -59,10 +59,19 @@ export default function Home() {
     );
   };
 
+  const handleMiniGameStart = (characterId: string) => {
+    game.startMiniGameDirectly(characterId);
+  };
+
   return (
     <main>
       {game.gameState === 'MENU' ? (
-        <MainMenu onStart={handleStart} onHardStart={handleHardStart} onPracticeStart={handlePracticeStart} />
+        <MainMenu
+          onStart={handleStart}
+          onHardStart={handleHardStart}
+          onPracticeStart={handlePracticeStart}
+          onMiniGameStart={handleMiniGameStart}
+        />
       ) : (
         <GameArena game={game} bgId={selectedBg} />
       )}

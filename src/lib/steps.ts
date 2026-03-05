@@ -103,3 +103,52 @@ export const getInstructions = (f1: Fraction, f2: Fraction, operation: string): 
         !step.toLowerCase().includes('final answer')
     );
 };
+export const getAlternativeExplanation = (f1: Fraction, f2: Fraction, operation: string): string[] => {
+    const steps: string[] = [];
+
+    switch (operation) {
+        case '+':
+            steps.push(`Imagine we have 🍎 treats cut into ${f1.denominator} equal pieces.`);
+            steps.push(`First, we have ${f1.numerator} slices.`);
+            if (f1.denominator === f2.denominator) {
+                steps.push(`Then we get ${f2.numerator} more slices of the same size.`);
+                steps.push(`Count them all up! ${f1.numerator} slices + ${f2.numerator} slices = ${f1.numerator + f2.numerator} slices.`);
+            } else {
+                steps.push(`But the other pizza has slices of a different size (${f2.denominator})!`);
+                steps.push(`We need to cut them all to be the same size (${lcm(f1.denominator, f2.denominator)}) so we can count them easily.`);
+                steps.push(`Once they are all the same size, we just count how many slices we have total.`);
+            }
+            break;
+        case '-':
+            steps.push(`Imagine a treat 🍱 divided into ${f1.denominator} pieces.`);
+            steps.push(`We start with ${f1.numerator} slices on the tray.`);
+            if (f1.denominator === f2.denominator) {
+                steps.push(`Someone eats ${f2.numerator} of those slices.`);
+                steps.push(`How many are left? ${f1.numerator} - ${f2.numerator} = ${f1.numerator - f2.numerator} slices!`);
+            } else {
+                steps.push(`The slices being taken away are a different size (${f2.denominator}).`);
+                steps.push(`Let's cut everything to be the same size (${lcm(f1.denominator, f2.denominator)}) first.`);
+                steps.push(`Then we can just take away the number of slices we need!`);
+            }
+            break;
+        case '*':
+            steps.push("Multiplying fractions is like finding a 'fraction of a fraction'. 🍰");
+            steps.push(`Imagine taking ${f1.numerator}/${f1.denominator} of a snack...`);
+            steps.push(`...and then taking ${f2.numerator}/${f2.denominator} of THAT piece!`);
+            steps.push("Simply multiply the top numbers to see how many pieces you have, and the bottom numbers to see how small they are.");
+            break;
+        case '/':
+            steps.push("Dividing fractions is like asking: 'How many of these fit into that?' 📦");
+            steps.push(`We're seeing how many ${fmt(f2)} pieces fit inside ${fmt(f1)}.`);
+            steps.push("A cool trick is to flip the second fraction and multiply! It gives you the same answer.");
+            break;
+        case 'compare':
+            steps.push("Which plate has more treats? 🍽️");
+            steps.push(`${fmt(f1)} vs ${fmt(f2)}`);
+            steps.push("Imagine the treats are the same size. Which one has more actual food on it?");
+            steps.push("If you cut a pizza into more pieces (smaller denominator), each piece gets smaller!");
+            break;
+    }
+
+    return steps;
+};
